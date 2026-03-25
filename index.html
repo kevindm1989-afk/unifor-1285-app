@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0f1c">
+<title>Unifor 1285 — AI Assistant</title>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiVW5pZm9yIDEyODUgQUkgQXNzaXN0YW50Iiwic2hvcnRfbmFtZSI6IlVuaWZvciAxMjg1IiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzBhMGYxYyIsInRoZW1lX2NvbG9yIjoiIzBhMGYxYyJ9">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #0a0f1c;
+    --bg-secondary: #111827;
+    --bg-card: #1a2236;
+    --bg-input: #0f1629;
+    --accent: #e42320;
+    --accent-dim: #b91c1c;
+    --accent-glow: rgba(228, 35, 32, 0.12);
+    --accent-secondary: #f59e0b;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border: #1e293b;
+    --border-accent: rgba(228, 35, 32, 0.3);
+    --success: #10b981;
+    --danger: #ef4444;
+    --info: #3b82f6;
+    --radius: 14px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100dvh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Header ── */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10, 15, 28, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px 12px;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 2px;
+  }
+
+  .logo-mark {
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, var(--accent), #991b1b);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 0 24px var(--accent-glow);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .logo-mark svg {
+    width: 22px;
+    height: 22px;
+    fill: white;
+  }
+
+  .header-titles { flex: 1; }
+
+  .header-title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+  }
+
+  .header-title .local {
+    color: var(--accent);
+  }
+
+  .header-sub {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  .header-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--accent-glow);
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    border: 1px solid var(--border-accent);
+  }
+
+  /* ── Navigation Tabs ── */
+  .nav-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 12px 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+
+  .nav-tab {
+    flex-shrink: 0;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .nav-tab.active {
+    background: var(--accent-glow);
+    border-color: var(--border-accent);
+    color: var(--accent);
+  }
+
+  .nav-tab-icon { font-size: 15px; }
+
+  /* ── Main Content ── */
+  .main { padding: 0 20px 120px; }
+
+  .view { display: none; }
+  .view.active { display: block; animation: fadeUp 0.3s ease; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-title {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin: 24px 0 12px;
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: var(--border-accent); }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .card-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .card-icon.red { background: var(--accent-glow); }
+  .card-icon.blue { background: rgba(59, 130, 246, 0.15); }
+  .card-icon.green { background: rgba(16, 185, 129, 0.15); }
+  .card-icon.amber { background: rgba(245, 158, 11, 0.15); }
+
+  .card-label { font-size: 15px; font-weight: 600; }
+  .card-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* ── Chat Interface ── */
+  .chat-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-top: 8px;
+  }
+
+  .chat-bubble {
+    max-width: 88%;
+    padding: 14px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    animation: fadeUp 0.3s ease;
+    white-space: pre-wrap;
+  }
+
+  .chat-bubble.assistant {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+    align-self: flex-start;
+  }
+
+  .chat-bubble.user {
+    background: linear-gradient(135deg, var(--accent), #991b1b);
+    border-bottom-right-radius: 4px;
+    align-self: flex-end;
+    color: #fecaca;
+  }
+
+  .chat-bubble.typing {
+    display: flex;
+    gap: 5px;
+    padding: 16px 20px;
+  }
+
+  .typing-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    animation: typingPulse 1.2s ease infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+  @keyframes typingPulse {
+    0%, 60%, 100% { opacity: 0.3; transform: scale(0.85); }
+    30% { opacity: 1; transform: scale(1); }
+  }
+
+  /* ── Input Area ── */
+  .input-area {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(10, 15, 28, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    padding: 14px 20px calc(14px + var(--safe-bottom));
+    z-index: 100;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .input-field {
+    flex: 1;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 15px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-primary);
+    resize: none;
+    min-height: 44px;
+    max-height: 120px;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.4;
+  }
+
+  .input-field:focus { border-color: var(--border-accent); }
+  .input-field::placeholder { color: var(--text-muted); }
+
+  .send-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, var(--accent), #991b1b);
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+
+  .send-btn:active { transform: scale(0.92); }
+  .send-btn:disabled { opacity: 0.4; }
+
+  /* ── Forms ── */
+  .text-area-full {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-primary);
+    resize: vertical;
+    min-height: 140px;
+    outline: none;
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  .text-area-full:focus { border-color: var(--border-accent); }
+  .text-area-full::placeholder { color: var(--text-muted); }
+
+  .form-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .form-input {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-primary);
+    outline: none;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+  }
+
+  .form-input:focus { border-color: var(--border-accent); }
+  .form-input::placeholder { color: var(--text-muted); }
+
+  select.form-input {
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+
+  /* ── Buttons ── */
+  .btn {
+    padding: 12px 20px;
+    border-radius: 10px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #991b1b);
+    color: white;
+  }
+
+  .btn-secondary {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+  }
+
+  .btn-block { width: 100%; justify-content: center; }
+
+  /* ── Output Box ── */
+  .output-box {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    margin-top: 12px;
+    max-height: 500px;
+    overflow-y: auto;
+  }
+
+  /* ── Quick Actions ── */
+  .quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .quick-action {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .quick-action:hover { border-color: var(--border-accent); }
+  .quick-action-icon { font-size: 24px; margin-bottom: 8px; }
+
+  .quick-action-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-open { background: rgba(245, 158, 11, 0.15); color: var(--accent-secondary); }
+  .badge-filed { background: rgba(59, 130, 246, 0.15); color: var(--info); }
+  .badge-resolved { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+
+  /* ── Grievance List ── */
+  .grievance-item {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .grievance-item:last-child { border-bottom: none; }
+
+  .grievance-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .grievance-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  .grievance-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .grievance-date { font-size: 12px; color: var(--text-muted); }
+
+  /* ── Document List ── */
+  .doc-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .doc-item:last-child { border-bottom: none; }
+
+  .doc-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: var(--bg-input);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .doc-name { font-size: 14px; font-weight: 500; }
+  .doc-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  /* ── Empty State ── */
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text-muted);
+  }
+  .empty-state-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+  .empty-state-text { font-size: 14px; line-height: 1.6; }
+
+  /* ── API Status ── */
+  .api-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 6px 0;
+  }
+
+  .api-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+  }
+
+  .api-dot.offline { background: var(--danger); }
+
+  /* ── Responsive ── */
+  @media (min-width: 600px) {
+    .main { max-width: 560px; margin: 0 auto; }
+    .input-area > .input-row { max-width: 560px; margin: 0 auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-top">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-2h2v2zm0-4h-2V7h2v6zm4 4h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+    </div>
+    <div class="header-titles">
+      <div class="header-title">Unifor <span class="local">1285</span> AI</div>
+      <div class="header-sub">Saputo Dairy Products · Georgetown, ON</div>
+    </div>
+    <div class="header-badge">AI</div>
+  </div>
+</div>
+
+<!-- Navigation -->
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="switchView('home')">
+    <span class="nav-tab-icon">🏠</span> Home
+  </button>
+  <button class="nav-tab" onclick="switchView('ask')">
+    <span class="nav-tab-icon">💬</span> Ask AI
+  </button>
+  <button class="nav-tab" onclick="switchView('grievance')">
+    <span class="nav-tab-icon">📝</span> Grievance
+  </button>
+  <button class="nav-tab" onclick="switchView('transcribe')">
+    <span class="nav-tab-icon">🎙️</span> Transcribe
+  </button>
+  <button class="nav-tab" onclick="switchView('docs')">
+    <span class="nav-tab-icon">📁</span> Docs
+  </button>
+  <button class="nav-tab" onclick="switchView('inspect')">
+    <span class="nav-tab-icon">🔍</span> Inspect
+  </button>
+</div>
+
+<!-- ═══════════ HOME ═══════════ -->
+<div class="main">
+  <div id="view-home" class="view active">
+    <div class="section-title">Quick Actions</div>
+    <div class="quick-actions">
+      <div class="quick-action" onclick="switchView('ask'); setPrompt('What does our Unifor 1285 collective agreement say about overtime?')">
+        <div class="quick-action-icon">📜</div>
+        <div class="quick-action-label">Contract Q&A</div>
+      </div>
+      <div class="quick-action" onclick="switchView('grievance')">
+        <div class="quick-action-icon">⚖️</div>
+        <div class="quick-action-label">File Grievance</div>
+      </div>
+      <div class="quick-action" onclick="switchView('transcribe')">
+        <div class="quick-action-icon">🎙️</div>
+        <div class="quick-action-label">Meeting Notes</div>
+      </div>
+      <div class="quick-action" onclick="switchView('inspect'); addFinding();">
+        <div class="quick-action-icon">🔍</div>
+        <div class="quick-action-label">Quick Inspect</div>
+      </div>
+    </div>
+
+    <!-- ── JHSC Metrics Dashboard ── -->
+    <div class="section-title">JHSC Status — Live Dashboard</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
+      <div class="card" style="text-align:center;padding:14px 10px;">
+        <div style="font-size:28px;font-weight:700;color:var(--accent);">15</div>
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Total Open</div>
+      </div>
+      <div class="card" style="text-align:center;padding:14px 10px;">
+        <div style="font-size:28px;font-weight:700;color:#ef4444;">9</div>
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">High Risk</div>
+      </div>
+      <div class="card" style="text-align:center;padding:14px 10px;">
+        <div style="font-size:28px;font-weight:700;color:#f59e0b;">335d</div>
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Oldest Item</div>
+      </div>
+    </div>
+
+    <!-- ── Overdue / High Priority ── -->
+    <div class="section-title">🔴 Overdue & High Priority</div>
+    <div class="card">
+      <div class="grievance-item">
+        <div class="grievance-top">
+          <span style="font-size:11px;font-weight:600;color:#ef4444;">335 DAYS</span>
+          <span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">High</span>
+        </div>
+        <div class="grievance-title">Ambient racking area — cracks & potholes</div>
+        <div class="grievance-date">Old Business · Follow-up: Alykhan / Chris J · WH</div>
+      </div>
+      <div class="grievance-item">
+        <div class="grievance-top">
+          <span style="font-size:11px;font-weight:600;color:#ef4444;">238 DAYS</span>
+          <span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">High</span>
+        </div>
+        <div class="grievance-title">Safety glasses not worn consistently in production</div>
+        <div class="grievance-date">Old Business · Follow-up: Scott Ahara · WH</div>
+      </div>
+      <div class="grievance-item">
+        <div class="grievance-top">
+          <span style="font-size:11px;font-weight:600;color:#ef4444;">135 DAYS</span>
+          <span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">High</span>
+        </div>
+        <div class="grievance-title">PPE zones — signage & supervisor updates needed</div>
+        <div class="grievance-date">Old Business · Follow-up: Scott Ahara · WH</div>
+      </div>
+    </div>
+
+    <!-- ── Follow-Up Owners ── -->
+    <div class="section-title">📋 Who Owes Follow-Ups</div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:14px;font-weight:500;">Scott Ahara</div>
+          <div style="font-size:12px;color:var(--text-muted);">H&S Coordinator</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">5 items</span>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:14px;font-weight:500;">Alykhan Kurji</div>
+          <div style="font-size:12px;color:var(--text-muted);">WH Manager</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;">2 items</span>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:14px;font-weight:500;">Mike Harman</div>
+          <div style="font-size:12px;color:var(--text-muted);">Management</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;">3 items</span>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:14px;font-weight:500;">Kiran</div>
+          <div style="font-size:12px;color:var(--text-muted);">Operations</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="badge" style="background:rgba(59,130,246,0.15);color:#3b82f6;">1 item</span>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;">
+        <div>
+          <div style="font-size:14px;font-weight:500;">Corey Skinner</div>
+          <div style="font-size:12px;color:var(--text-muted);">Mgmt Co-Chair</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="badge" style="background:rgba(59,130,246,0.15);color:#3b82f6;">2 items</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Recommendations ── -->
+    <div class="section-title">⚠️ Open Recommendations (OHSA s.9(20))</div>
+    <div class="card">
+      <div class="grievance-item">
+        <div class="grievance-top">
+          <span style="font-size:11px;font-weight:600;color:#f59e0b;">223 DAYS</span>
+          <span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">High</span>
+        </div>
+        <div class="grievance-title">Case Receiving humidity — hygienist assessment needed</div>
+        <div class="grievance-date">Owner: Corey S · WH · Employer must respond within 21 days</div>
+      </div>
+      <div class="grievance-item">
+        <div class="grievance-top">
+          <span style="font-size:11px;font-weight:600;color:#f59e0b;">35 DAYS</span>
+          <span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">High</span>
+        </div>
+        <div class="grievance-title">Long Johns vibrations — safe work procedure needed</div>
+        <div class="grievance-date">Owner: Alykhan · WH · SOP confirmed, deployment pending</div>
+      </div>
+    </div>
+
+    <!-- ── New Business Summary ── -->
+    <div class="section-title">New Business (10 items)</div>
+    <div class="card">
+      <div class="grievance-item">
+        <div class="grievance-top">
+          <span class="grievance-id">#1 INSP</span>
+          <span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">High</span>
+        </div>
+        <div class="grievance-title">Picking >3x/week — ergonomic assessment needed</div>
+        <div class="grievance-date">16d · Kevin → Alykhan · WH</div>
+      </div>
+      <div class="grievance-item">
+        <div class="grievance-top">
+          <span class="grievance-id">#3 INSIGHT</span>
+          <span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">High</span>
+        </div>
+        <div class="grievance-title">SOPs & binders not matching current tasks</div>
+        <div class="grievance-date">2d · Kevin → Scott · CIP</div>
+      </div>
+      <div class="grievance-item">
+        <div class="grievance-top">
+          <span class="grievance-id">#4 INSIGHT</span>
+          <span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">High</span>
+        </div>
+        <div class="grievance-title">Fencing/netting needed — Pal sort area walkways</div>
+        <div class="grievance-date">16d · Dan → Mike H · OPS</div>
+      </div>
+      <div class="grievance-item">
+        <div class="grievance-top">
+          <span class="grievance-id">#7 INSP</span>
+          <span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">High</span>
+        </div>
+        <div class="grievance-title">Milk receiving processes not followed by drivers</div>
+        <div class="grievance-date">16d · Dan → Mike H · OPS</div>
+      </div>
+      <div class="grievance-item">
+        <div class="grievance-top">
+          <span class="grievance-id">#8 INSP</span>
+          <span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">High</span>
+        </div>
+        <div class="grievance-title">Side panels F12–14 not replaced, guards blocked</div>
+        <div class="grievance-date">18d · Kevin → Scott · OPS</div>
+      </div>
+      <div style="text-align:center;padding:10px 0;">
+        <span style="font-size:12px;color:var(--text-muted);cursor:pointer;" onclick="switchView('ask'); setPrompt('List all current New Business items with their status and risk levels')">View all 10 items in AI Chat →</span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-block" onclick="prepareMeetingBrief()" id="prep-btn" style="margin-top:8px;">
+      📋 Prepare Next Meeting Brief
+    </button>
+
+    <div id="meeting-brief-output" class="output-box" style="display:none;margin-top:12px;"></div>
+
+    <div style="text-align:center;padding:16px 0 8px;">
+      <span style="font-size:11px;color:var(--text-muted);">Data from JHSC Meeting — March 5, 2026</span>
+    </div>
+  </div>
+
+  <!-- ═══════════ ASK AI ═══════════ -->
+  <div id="view-ask" class="view">
+    <div class="api-status">
+      <div class="api-dot" id="api-dot"></div>
+      <span id="api-status-text">Claude AI Connected</span>
+    </div>
+    <div class="section-title">Ask Your Union AI</div>
+    <div class="chat-container" id="chat-container">
+      <div class="chat-bubble assistant">Hi Kevin — I'm your Unifor 1285 AI Assistant with your full collective agreement AND current JHSC open items loaded.
+
+I have:
+• CBA (June 2025–2028) — all 20 articles + appendices
+• 10 New Business items, 3 Old Business, 2 Recommendations
+• 9-zone inspection data & action owners
+
+Ask me about contract clauses, grievance timelines, current open safety items, who's responsible for what, or anything JHSC-related.
+
+What can I help you with?</div>
+    </div>
+  </div>
+
+  <!-- ═══════════ GRIEVANCE ═══════════ -->
+  <div id="view-grievance" class="view">
+    <div class="section-title">Draft a Grievance</div>
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-desc">Fill in the details below. AI will draft a formal grievance letter with Unifor Local 1285 and Saputo Georgetown details pre-filled.</div>
+    </div>
+
+    <label class="form-label">Grievance Type</label>
+    <select class="form-input" id="grv-type">
+      <option value="">Select type...</option>
+      <option>Overtime / Scheduling</option>
+      <option>Health & Safety</option>
+      <option>Discipline / Discharge</option>
+      <option>Seniority</option>
+      <option>Wages / Benefits</option>
+      <option>Working Conditions</option>
+      <option>Harassment / Discrimination</option>
+      <option>Contracting Out</option>
+      <option>Other</option>
+    </select>
+
+    <label class="form-label">Grievor Name</label>
+    <input type="text" class="form-input" id="grv-name" placeholder="Full name of the grievor">
+
+    <label class="form-label">Department / Shift</label>
+    <input type="text" class="form-input" id="grv-dept" placeholder="e.g. Shipping — Afternoon Shift">
+
+    <label class="form-label">Date of Incident</label>
+    <input type="date" class="form-input" id="grv-date">
+
+    <label class="form-label">Describe What Happened</label>
+    <textarea class="text-area-full" id="grv-desc" placeholder="In your own words, describe the incident or violation. Include names, times, locations, and any witnesses if possible."></textarea>
+
+    <label class="form-label">Contract Articles Violated (if known)</label>
+    <input type="text" class="form-input" id="grv-articles" placeholder="e.g. Article 12.3, Article 7.1">
+
+    <label class="form-label">Remedy Sought</label>
+    <input type="text" class="form-input" id="grv-remedy" placeholder="e.g. Back pay, reinstatement, cease and desist">
+
+    <button class="btn btn-primary btn-block" onclick="draftGrievance()" id="grv-btn">
+      ⚖️ Draft Grievance Letter
+    </button>
+
+    <div id="grievance-output" class="output-box" style="display:none;"></div>
+  </div>
+
+  <!-- ═══════════ TRANSCRIBE ═══════════ -->
+  <div id="view-transcribe" class="view">
+    <div class="section-title">Meeting Summarizer</div>
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-desc">Paste your Otter.ai or manual transcript. AI will extract action items, inspection findings, decisions, and follow-ups for your JHSC minutes tracker and inspection findings tracker.</div>
+    </div>
+
+    <label class="form-label">Meeting Type</label>
+    <select class="form-input" id="mtg-type">
+      <option value="">Select type...</option>
+      <option>JHSC Meeting</option>
+      <option>Union Meeting</option>
+      <option>Grievance Hearing</option>
+      <option>Labour-Management Meeting</option>
+      <option>Steward Meeting</option>
+      <option>Other</option>
+    </select>
+
+    <label class="form-label">Meeting Date</label>
+    <input type="date" class="form-input" id="mtg-date">
+
+    <label class="form-label">Attendees (optional)</label>
+    <input type="text" class="form-input" id="mtg-attendees" placeholder="e.g. Kevin, Corey Skinner, Scott Ahara, Mike Harman">
+
+    <label class="form-label">Paste Transcript</label>
+    <textarea class="text-area-full" id="mtg-transcript" placeholder="Paste the full meeting transcript here..." style="min-height:200px;"></textarea>
+
+    <button class="btn btn-primary btn-block" onclick="summarizeTranscript()" id="mtg-btn">
+      🎙️ Extract Action Items & Summary
+    </button>
+
+    <div id="transcript-output" class="output-box" style="display:none;"></div>
+    <button class="btn btn-secondary btn-block" id="export-btn" style="display:none;margin-top:12px;" onclick="exportToExcel()">
+      📊 Export Action Items to Excel
+    </button>
+  </div>
+
+  <!-- ═══════════ DOCS ═══════════ -->
+  <div id="view-docs" class="view">
+    <div class="section-title">Document Library</div>
+
+    <input type="text" class="form-input" placeholder="🔍 Search documents..." id="doc-search" oninput="filterDocs()" style="margin-bottom:4px;">
+
+    <div class="card" id="doc-list">
+      <div class="doc-item" data-name="Unifor Local 1285 Collective Agreement Saputo">
+        <div class="doc-icon">📜</div>
+        <div>
+          <div class="doc-name">Unifor 1285 Collective Agreement</div>
+          <div class="doc-meta">PDF · Saputo Georgetown · Current Term</div>
+        </div>
+      </div>
+      <div class="doc-item" data-name="Unifor Constitution">
+        <div class="doc-icon">📕</div>
+        <div>
+          <div class="doc-name">Unifor National Constitution</div>
+          <div class="doc-meta">PDF · Reference Document</div>
+        </div>
+      </div>
+      <div class="doc-item" data-name="OHSA Ontario Health Safety Act">
+        <div class="doc-icon">🛡️</div>
+        <div>
+          <div class="doc-name">Ontario Health & Safety Act (OHSA)</div>
+          <div class="doc-meta">PDF · Legislation Reference</div>
+        </div>
+      </div>
+      <div class="doc-item" data-name="Ontario Employment Standards Act ESA">
+        <div class="doc-icon">📘</div>
+        <div>
+          <div class="doc-name">Employment Standards Act (ESA)</div>
+          <div class="doc-meta">PDF · Ontario Legislation</div>
+        </div>
+      </div>
+      <div class="doc-item" data-name="JHSC Meeting Minutes 2026 Saputo Georgetown">
+        <div class="doc-icon">📋</div>
+        <div>
+          <div class="doc-name">JHSC Meeting Minutes — 2026</div>
+          <div class="doc-meta">Google Sheets · Auto-updated</div>
+        </div>
+      </div>
+      <div class="doc-item" data-name="Inspection Findings Tracker Saputo Georgetown Zones">
+        <div class="doc-icon">🔍</div>
+        <div>
+          <div class="doc-name">Inspection Findings Tracker</div>
+          <div class="doc-meta">Excel · 9 Zones · Dashboard</div>
+        </div>
+      </div>
+      <div class="doc-item" data-name="Unifor Grievance Procedure Guide">
+        <div class="doc-icon">⚖️</div>
+        <div>
+          <div class="doc-name">Unifor Grievance Procedure Guide</div>
+          <div class="doc-meta">PDF · Step-by-step process</div>
+        </div>
+      </div>
+      <div class="doc-item" data-name="Canada Labour Code">
+        <div class="doc-icon">📗</div>
+        <div>
+          <div class="doc-name">Canada Labour Code</div>
+          <div class="doc-meta">PDF · Federal Legislation</div>
+        </div>
+      </div>
+      <div class="doc-item" data-name="Saputo Workplace Harassment Policy">
+        <div class="doc-icon">📄</div>
+        <div>
+          <div class="doc-name">Saputo Workplace Policies</div>
+          <div class="doc-meta">PDF · Company Policies</div>
+        </div>
+      </div>
+      <div class="doc-item" data-name="CWIPP Canada Wide Industrial Pension Plan">
+        <div class="doc-icon">💰</div>
+        <div>
+          <div class="doc-name">CWIPP Pension Plan Summary</div>
+          <div class="doc-meta">PDF · Pension Benefits</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" id="doc-empty" style="display:none;">
+      <div class="empty-state-icon">📁</div>
+      <div class="empty-state-text">No documents match your search.</div>
+    </div>
+
+    <button class="btn btn-secondary btn-block" style="margin-top:16px;" onclick="alert('In the full version, this opens a file picker to upload and index documents for AI search.')">
+      📤 Upload Document
+    </button>
+  </div>
+
+  <!-- ═══════════ INSPECT ═══════════ -->
+  <div id="view-inspect" class="view">
+    <div class="section-title">Zone Inspection</div>
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-desc">Walk your zone and log findings. AI will format them in JHSC language with risk ratings and recommended actions.</div>
+    </div>
+
+    <label class="form-label">Zone</label>
+    <select class="form-input" id="insp-zone">
+      <option value="">Select zone...</option>
+      <option>Zone 1</option><option>Zone 2</option><option>Zone 3</option>
+      <option>Zone 4</option><option>Zone 5</option><option>Zone 6</option>
+      <option>Zone 7</option><option>Zone 8</option><option>Zone 9</option>
+    </select>
+
+    <label class="form-label">Inspector</label>
+    <select class="form-input" id="insp-inspector">
+      <option value="">Select inspector...</option>
+      <option>Kevin</option><option>Frank</option><option>Adrian</option>
+      <option>Dan</option><option>Paulo</option>
+    </select>
+
+    <label class="form-label">Inspection Date</label>
+    <input type="date" class="form-input" id="insp-date">
+
+    <div class="section-title">Findings</div>
+    <div id="findings-list"></div>
+
+    <button class="btn btn-secondary btn-block" onclick="addFinding()" style="margin-bottom:16px;">
+      + Add Finding
+    </button>
+
+    <div id="finding-template" style="display:none;">
+      <div class="card finding-card" style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span style="font-size:13px;font-weight:600;color:var(--accent);" class="finding-num">Finding #1</span>
+          <button style="background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;" onclick="this.closest('.finding-card').remove();renumberFindings();">✕</button>
+        </div>
+
+        <label class="form-label">Hazard Category</label>
+        <select class="form-input finding-category">
+          <option value="">Select...</option>
+          <option>Housekeeping / Slip-Trip-Fall</option>
+          <option>Guarding / Machine Safety</option>
+          <option>Electrical</option>
+          <option>Chemical / WHMIS</option>
+          <option>Ergonomic / MSD</option>
+          <option>Fire Safety / Exits</option>
+          <option>PPE Compliance</option>
+          <option>Racking / Storage</option>
+          <option>Forklift / Mobile Equipment</option>
+          <option>Lockout / Tagout</option>
+          <option>Signage / Labels</option>
+          <option>Temperature / Ventilation</option>
+          <option>First Aid / Emergency</option>
+          <option>Other</option>
+        </select>
+
+        <label class="form-label">What did you observe?</label>
+        <textarea class="text-area-full finding-observation" placeholder="Describe what you saw — be specific about location, condition, and who/what is at risk." style="min-height:80px;"></textarea>
+
+        <label class="form-label">Risk Level</label>
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+          <button class="btn btn-secondary risk-btn" onclick="setRisk(this,'Low')" style="flex:1;justify-content:center;font-size:12px;">🟢 Low</button>
+          <button class="btn btn-secondary risk-btn" onclick="setRisk(this,'Med')" style="flex:1;justify-content:center;font-size:12px;">🟡 Med</button>
+          <button class="btn btn-secondary risk-btn" onclick="setRisk(this,'High')" style="flex:1;justify-content:center;font-size:12px;">🔴 High</button>
+        </div>
+        <input type="hidden" class="finding-risk" value="">
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-block" onclick="generateInspectionReport()" id="insp-btn">
+      🔍 Generate Inspection Report
+    </button>
+
+    <div id="inspection-output" class="output-box" style="display:none;"></div>
+
+    <button class="btn btn-secondary btn-block" id="insp-export-btn" style="display:none;margin-top:12px;" onclick="exportInspection()">
+      📊 Export Findings to CSV
+    </button>
+  </div>
+</div>
+
+<!-- Input Area (for Ask AI view) -->
+<div class="input-area" id="input-area" style="display:none;">
+  <div class="input-row">
+    <textarea class="input-field" id="chat-input" placeholder="Ask about your contract, rights, or policies..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="send-btn" onclick="sendMessage()" id="send-btn">↑</button>
+  </div>
+</div>
+
+<script>
+  // ════════════════════════════════════════
+  //  CONFIG
+  // ════════════════════════════════════════
+  const SYSTEM_PROMPT = "You are the Unifor Local 1285 AI Assistant for members at Saputo Dairy Products Canada G.P., Georgetown (Halton Hills), Ontario.\n\nIMPORTANT: You have the FULL TEXT of the current Unifor Local 1285 Collective Agreement (effective June 23, 2025, expiring June 23, 2028) embedded below. When answering questions, ALWAYS cite the specific Article number and section. Quote relevant language from the agreement when helpful.\n\nYour role:\n- Answer questions about the collective agreement with specific article references\n- Advise on workplace rights under OHSA, ESA, and Ontario labour law\n- Help with JHSC (Joint Health & Safety Committee) matters\n- Advise on grievance procedures (Article 4) and timelines\n- Explain workplace health and safety obligations (Article 18)\n- Help with seniority questions (Article 7), job postings (Article 8), overtime (Article 9)\n- Explain benefits and pension provisions (Appendix C)\n- Reference Letters of Understanding when applicable\n\nContext:\n- The user is a JHSC Worker Co-Chair and Unifor Local 1285 member\n- The workplace is a 9-zone milk pasteurizing facility in Halton Hills\n- The JHSC has equal representation (3 union + 3 management) per Article 18.02(a)\n- The plant operates multiple shifts with shift premiums per Article 9.13\n\nImportant guidelines:\n- Cite specific articles, sections, and appendices from the CBA\n- When quoting the CBA, use the exact language from the agreement\n- Note time limits for grievances (5 working days per Article 4.01)\n- Distinguish between what the CBA says vs. general labour law\n- For matters not covered by the CBA, reference OHSA, ESA, or Unifor constitution\n- Remind users that formal grievances should involve their union steward\n- Be concise and practical - the user is on a mobile device\n- Use Canadian English spelling\n\nUNIFOR LOCAL 1285 COLLECTIVE AGREEMENT\nSaputo Dairy Products Canada G.P.\nEffective: June 23, 2025 to June 23, 2028\n\n--- Page 1 ---\nCOLLECTIVE AGREEMENT\n\nThis Agreement, effective the 23rd day of June 2025\n\nBETWEEN\n\nSAPUTO DAIRY PRODUCTS CANADA G.P.\nhereinafter referred to as the \"COMPANY\"\n\n-AND-\n\nUNIFOR AND ITS LOCAL 1285\nhereinafter referred to as the \"UNION\"\n\f\n\n--- Page 2 ---\nTABLE OF CONTENTS\n\nArticle Subject Page #\n\nARTICLE 1 - RECOGNITION\nARTICLE 2 - MANAGEMENT RIGHTS\nARTICLE 3 - UNION SECURITY .........\nARTICLE 4 - GRIEVANCE AND ARBITI\nARTICLE 5 - DISCHARGE AND DISCIPLINE ...\nARTICLE 6 - STRIKES OR LOCKOUTS..\nARTICLE 7 - SENIORITY .........ccecereee\nARTICLE 8 - JOB POSTINGS AND VACANCIES .\nARTICLE 9 - HOURS OF WORK & OVERTIME\nARTICLE 10 - VACATIONS ........\nARTICLE 11 - PAID HOLIDAY...\nARTICLE 12 - NOTICE OF ABSENCE & LEAVE OF ABSENCE\nARTICLE 13 - BEREAVEMENT LEAVE ..\nARTICLE 14 - JURY DUTY...\nARTICLE 15 - UNIFORMS...\nARTICLE 16 - GENDER......\nARTICLE 17 - DISCRIMINATION .\nARTICLE 18 - HEALTH, SAFETY AND ENVIRONMENTAL .\nARTICLE 19 - GENERAL...\nARTICLE 20 - TERM OF AGREEMENT...\nAPPENDIX \u201cA\u201d PART-TIME EMPLOYEES...\nAPPENDIX \u201cB\u201d - WAGES / CLASSIFICATIONS ...\nAPPENDIX \u201cC\" - HEALTH & WELFARE - PENSION\nLETTER OF UNDERSTANDING #1 ....\nLETTER OF UNDERSTANDING #2 .\nLETTER OF UNDERSTANDING #83 .\nLETTER OF UNDERSTANDING #4 .\nLETTER OF UNDERSTANDING #5 .\nLETTER OF UNDERSTANDING #6 ....\nLETTER OF UNDERSTANDING #7 ....\nLETTER OF UNDERSTANDING #8 .\nLETTER OF UNDERSTANDING #9 .\nLETTER OF UNDERSTANDING #10 ..\nLETTER OF UNDERSTANDING #11 .\nLETTER OF INTENT 1.2... cccsssscsessssessssssssesscsessesssesaesesccaessepsescsnaeneneracasseesessessssneasanasesessesusseaneaaausenneseanserenines 43\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\f\n\n--- Page 3 ---\nARTICLE 1 - RECOGNITION\n\n1.01\n\n1.04\n\nThe company recognizes the Union, UNIFOR and its Local 1285, as the exclusive Bargaining agent\nfor all employees at the Halton Hills Milk Pasteurizing Plant save and except Supervisors, persons\nabove the rank of Supervisor, office staff, and persons covered by subsisting collective agreements.\n\nThe purpose of this Agreement is to establish mutually satisfactory relations between the Company\nand its employees, to provide machinery for the prompt and equitable disposition of grievances and\nto establish and maintain satisfactory working conditions, hours of work and wages for all\nemployees who are subject to the provisions of this Agreement.\n\nThe Company will not normally utilize persons outside of the bargaining unit to perform bargaining\nunit work. However, the Union recognizes that the nature of the Company's business emphasizes\nthe need to react quickly and cost-effectively to changes that are necessary for the benefit of the\nbusiness. The following situations are the examples where non-bargaining unit persons may\nperform work normally done by bargaining unit members: due to emergency situations beyond the\ncontro! of the Company; for training or instruction; due to an employee absence; to conduct\nresearch and development; to ensure the safety of the employees, or to prevent damage to\nmerchandise and/or equipment. In the case of employee absence, the Company will make\nreasonable efforts to find other bargaining unit employees to perform the required work.\n\nIn the event that the Company determines that it is necessary for persons outside of the bargaining\nunit to perform bargaining unit work, the performance of such work shall not occur without prior\ndiscussion with one of the Union's Stewards. The Union\u2019s steward shall be entitled to make\nrecommendations with respect to the manner in which such work is to be performed. In the event\nthat the Company and the Union steward are unable to resolve the issue, the Company shall be\nentitled to take whatever steps are necessary and the Union may file a grievance if it believes there\nhas been a violation of the collective agreement.\n\nThe company agrees that temporary employees will not be used to the extent of displacing\na part/full time job or preventing the hiring of part/full time employees.\n\n(a) Full-time employees are those who normally work the hours provided for in Article 9.01\nherein.\n\n(b) Part-time employees are those employees who normally work thirty-two (32) hours per\nweek or less. All matters relative to part-time employees shall be governed by Appendix\n\u201cA\u201d of this Agreement.\n\n(c) The Company agrees that part time employees will not be used to the extent of displacing\na full time job or preventing the hiring of full time employees.\n\nARTICLE 2 - MANAGEMENT RIGHTS\n\n\n\n2.01\n\nThe management of the business and the direction of the working force is a right vested solely and\nexclusively with the Company and the Company shall have the right to:\n\n(a) plan, direct and control the operations;\n\n(b) maintain the discipline and efficiency of the employees;\n\n(c) establish and require employees to observe Company rules and regulations which are just\nand fair;\n\n(d) hire, layoff or assign working hours;\n\n(e) transfer, promote or demote employees;\n\f\n\n--- Page 4 ---\n(fy suspend, discharge or otherwise discipline employees for just cause;\n(g) determine the products to be processed, manufactured or handled;\n(h) study or introduce new or improved production methods and the Union agrees to co-\n\noperate with the Company in the installation of any such methods and in the education of\nits members for the necessity of such changes and improvements;\n\n(i) establish schedules of production and the methods, processes and means of production\nhandling and to determine the manner in which work is to be performed;\n\n(j) determine and establish the level of skills, ability, knowledge, competence and\nqualifications necessary to perform the work;\n\n(k) introduce and establish production/performance levels that employees are expected to\nmeet;\n\n(I) introduce and establish incentive/performance programs. The Company will meet and\n\ndiscuss with the Union prior to implementation;\n\n(m) introduce classifications and determine the appropriate hourly rates of pay and determine\nthe necessary skills, ability, qualifications and physical competence required for alli\nclassifications. The Company will meet and discuss with the Union prior to hiring.\n\nWithout limiting the generality of the foregoing, the provisions of Article 2.01 herein shall be deemed\nnot to exclude other functions not specifically set forth provided nothing herein shall restrict the\nrights of the parties pursuant to the Ontario Labour Relations Act and other provincial and federal\nstatutes. It is understood that the Company retains all rights not otherwise specifically provided for\nin this Agreement.\n\nARTICLE 3 - UNION SECURITY\n\n\n\n3.01\n\n3.02\n\n3.03\n\nIt is agreed that all full time and part time employees of the Company as of the date of signing of\nthis Agreement, will be or will become members of the Union and shall remain members in good\nstanding as provided in the Constitution and By Laws of the Union. All new employees after the\ndate of signing of this Agreement shall be required and sign an application for membership and\nauthorization for check off of dues and initiation fee, supplied by the Union to the Company.\n\nThe Union agrees to indemnify and hold the Company harmless against all claims, demands and\nexpenses, should any person at any time claim that the Company acted wrongfully or illegally in\nmaking such check-off deductions.\n\nThe Local Union copy of this form will be forwarded to the Local Union Financial Secretary upon\ncompletion.\n\nAll dues and initiation fees deducted must be remitted to the Local Union Financial\nSecretary within fifteen days following the end of the month in which such deductions\nwere made along with a list of names and the amount of each deduction.\n\nThe Company will also supply a list of those members who did not have Union dues deducted and\nthe reason why no deduction took place. The Company will provide the Union with a fist of\nbargaining unit employee\u2019s names, addresses and phone numbers. Such list will be updated\nquarterly.\n\nThe Company also agrees to include on the employee's T-4 slip for income tax purposes, the total\nUnion dues paid for the year.\n\f\n\n--- Page 5 ---\n3.07\n\nThe Financial Secretary of the Local Union will notify the Company of any change in the amount\nof Union Dues and/or Initiation Fee to be deducted in line with Constitutional requirement of the\nNational Union.\n\nThe Company acknowledges the right of the Union to elect up to five (5) Stewards plus the Plant\nChairperson, each of whom shall be a member in good standing of the Union and have been on\nthe Company\u2019s payroll as a regular full-time employee continuously for a period of one (1) year\nimmediately prior to election. Such five Stewards plus the Plant Chairperson constitute the Plant\nCommittee. Stewards shall be shift specific and shall only function on the shift on which they are\nelected. The Union may appoint up to five (5) alternate Stewards, each of whom will only function\nin the absence of a regular Steward. The Company shall be advised immediately in writing of any\nchange in the Plant Committee and alternate Steward list. The Company wil! endeavor to allow\ntime for a Steward or the Plant Chairperson to attend to Union matters, provided the request\nis made at least twenty-four (24) hours in advance\n\nStewards in the employ of the Company will not absent themselves from their work to deal with\ngrievances without first obtaining the permission of their immediate Supervisor. Permission will not\nbe withheld unreasonably and the Company will pay such Stewards at the appropriate hourly rates\nwhile attending to such matters. The Company will pay the members of the bargaining committee\nfor any regular hours lost during negotiations, up to but not including Conciliation.\n\nThe Company and the Union, represented by the Plant committee as defined in article 3.04, agree\nthat Labour-Management meetings will be held monthly or at such other times as may be mutually\nagreed between the parties, for the purpose of discussing matters of mutual interest or concern.\n\nThere shall be no Union activity during the Company's time or on Company's premises except that\nwhich is necessary for the processing of grievances and the administration and enforcement of this\nAgreement with the prior approval of the Company. The Company agrees the Union can hold the\nvote for the election of Local 1285 officers and for the in-plant/negotiating committee on Company\nproperty at times and locations agreeable with the Company. Such elections will be organized to\ncause no disruption to the operation.\n\nThe Company will provide enclosed bulletin boards for the use of the Union, at appropriate\ndesignated locations. The Union will have the right to post notices relating to matters of interest to\nthe Union and the employees with the prior approval of the Company. The Plant Chair will be\nprovided with a key to the bulletin boards.\n\nARTICLE 4 - GRIEVANCE AND ARBITRATION PROCEDURE\n\na ee ee eee\n\n4.01\n\nIf an employee covered by this Agreement has a complaint relating to the interpretation, application\nor administration of this Agreement or where the employee alleges a violation of this Agreement,\nan earnest effort will be made to settle such difference without delay in the following manner. It is\nunderstood that an employee has no grievance until he has first given his immediate Supervisor an\nopportunity to adjust his complaint within five (5) working days after the circumstances giving rise\nto the complaint first occurred or originated or the employee reasonably ought to have known of the\ncircumstances. The immediate Supervisor shall communicate his reply to the complaint within two\n(2) working days.\n\nSTEP 1\n\nIf after the above oral discussion has taken place, such complaint is not settled to the satisfaction\nof the employee concerned, then the employee shall with the assistance of a Steward submit a\nsigned, dated written statement of such grievance (on a form supplied by the Union) to the\nappropriate Manager or his designate within five (5) working days after the employee has received\nthe reply of the immediate Supervisor. The nature of the grievance, the Article or Articles of the\nAgreement that has or have been violated, misapplied or misinterpreted, the name of the grievor\nand the relief or remedy sought shall be set out in the grievance. The Manager or his designate,\n\f\n\n--- Page 6 ---\n4.01\n\n4.02\n\n4.03\n\n4.04\n\n4.07\n\n4.08\n\n4.09\n\n4.10\n\nas the case may be, will hold a meeting within three (3) working days, or such other time as may\nbe agreed by the parties, with the grievor, the shift Steward and the Chairperson to discuss the\ngrievance and shall deliver his decision in writing within five (5) working days following the meeting.\nFailing settlement, then:\n\nSTEP 2\n\nWithin five (5) working days following the decision under Step 1 the written grievance will be\nforwarded to the Human Resources Manager, or his designate, who will hold a meeting within five\n(5) working days, or such other time as may be agreed by the parties, with the grievor\u2019s Steward,\nthe Chairperson, and the Local 1285 representative to discuss the grievance.\n\nItis understood that the National Representative will also be present at the meeting, at the request\nof either party. The Human Resources Manager or his designate will give the Company's decision\nin writing within ten (10) working days from the date of the meeting.\n\nShould the Union desire to submit a policy grievance it must do so in writing within fifteen (15)\nworking days of the date upon which the incident giving rise to the grievance occurred and the\nCompany shall give its reply to the grievance in writing, within five (5) working days following receipt\nof the grievance. {f the Company does not respond within the five (5) working days, the grievance\nshould be considered denied.\n\nShould the Company wish to submit a grievance it shall do so in writing to the Union representative\nand the Union shall give its reply, in writing, within five (5) working days following receipt of the\ngrievance.\n\nShould any grievance fail to be satisfactorily settled under the foregoing provisions of this Article it\nmay be referred to arbitration by either the Company or the Union as herein provided.\n\nWhere a difference arises between the Company and the Union relating to the interpretation,\napplication or administration of this Agreement, including any question as to whether a matter is\narbitrable, or where an allegation is made that this Agreement has been violated, either of the\nparties may notify the other party in writing of its desire to submit the difference or allegation to\narbitration. Such notice must be given in writing to the other party within ten (10) working days after\nthe written decision is rendered at Step 2 of the Grievance Procedure and shall contain the name\nof three suggestions for arbitrator. The recipient of the notice shall within five (5) working days\ninform the other party whether any of the three (3) proposed arbitrators are satisfactory and, if not,\nwill suggest three (3) other names. The party desiring arbitration will then contact the other party if\nnecessary to resolve the choice of arbitrator. If the parties fail to agree upon an arbitrator within\ntwenty-one (21) working days, either party may apply to the Ontario Ministry of Labour to appoint\nan arbitrator.\n\nThe arbitrator shall hear and determine the matter and shall issue a decision which shall be final\nand binding upon the parties and upon any employee affected by it.\n\nThe arbitrator shall not have any authority to alter or amend in any way the provisions of this\nAgreement; to substitute any new provisions in lieu thereof; to give any decision inconsistent with,\nor contrary to, the terms and conditions of this Agreement; or to consider any matter not covered\nby a provision of this Agreement.\n\nThe cost and expenses of the arbitrator shall be borne equally by the parties. Either party may be\nrepresented by counsel.\n\nThe time limits in this Article are mandatory, but may be extended by mutual agreement. Any\ngrievance not filed or not appealed from one step of the grievance procedure to the next, or not\ntaken to arbitration within the specified time limits shall be deemed to be abandoned.\n\nNo matter may be submitted to arbitration which has not been properly carried through ail steps of\nthe grievance procedure and within the time limits specified or any agreed upon extension.\n\f\n\n--- Page 7 ---\n4.11\n\nEmployees who feel that they have been discharged without just cause may file a written grievance. All\ncases of discharge must be grieved within five (5) working days from date of discharge and will commence\nat Step 2.\n\nARTICLE 5 - DISCHARGE AND DISCIPLINE\n\n\n\n5.01\n\n5.02\n\n5.04\n\n5.05\n\n(a) No employee, except employees during their probationary period, shall be discharged or\ndisciplined except for just cause.\n\n(b) Discharge and discipline grievances may be settled by confirming the Company's decision\nor by re-instating the discharged or suspended employee with compensation for time fost,\nless interim earnings if applicable or by any other arrangement which is just and equitable\nin the opinion of the Company and the Union.\n\nThe Company agrees that whenever an interview is held with an employee regarding his work or\nconduct that might lead to discipline or which becomes part of his record, the Steward or a Union\nrepresentative shall be present at such interview. Further, the Union representative or Steward will\nleave the meeting if requested to leave by the employee. Any employee suspended pending\ninvestigation will be paid regular wages during the absence, with the exception of misconduct that\ncould lead to a just cause termination.\n\nAll disciplinary warnings or reprimands which are placed in an employee\u2019s record and all notices\nof demotion for cause, discharge or suspension, shall be in writing and shall contain the reason\nfor the warning, reprimand, suspension or discharge. One (1) copy shall be given to the employee\nand one (1) copy shall be forwarded to the Union within five (5) working days of the employee\nof the incident giving rise thereto, provided that this period may be extended by mutual\nagreement. Failure to provide any of the copies referred to herein shail render the discipline null\nand void. Both parties agreed that the sunset clause would result in the full removal of\ndiscipline from the Employees record.\n\nThe Company may discharge any employee for just cause. Without limiting the generality of the\nforegoing, the Company shall have the right to discipline up to and including discharge upon any of\nthe following, or similar grounds, without notice of pay in lieu thereof:\n\n(i) Stealing, dishonesty, willful destruction of Company property, graffiti or physical violence\ndirected at other employees;\n\n(ii) Drinking while on duty or being under the influence of liquor or non-prescription drugs while\non duty;\n\n(iii) Direct refusal to obey orders given by management unless such orders jeopardize life,\n\nhealth, or safety or the employee.\n\nAll discipline shall be cancelled after twelve (12) months from date of issue. At date of ratification,\ndiscipline for Harassment/Workplace Violence which will remain on file for twenty four (24) months\nfrom date of issue. Attendance and general work rules shall be treated as separate for the purpose\nof progressive discipline.\n\nARTICLE 6 - STRIKES OR LOCKOUTS\n\n\n\n6.01\n\nThe Union undertakes and agrees that while this agreement is in operation, neither the Union nor\nany employee, shall take part in or call or encourage any strike, picketing, sit-down, slowdown or\nany suspension of, stoppage of, or interference with, work or production which shall in any way\naffect the operations of the Company. Nor shall there be any sympathy strikes or secondary\nboycotts and the Company agrees that it will not engage in any lockout during the term of this\nagreement.\n\f\n\n--- Page 8 ---\nARTICLE 7 - SENIORITY\n\n\n\n7.01\n\n7.04\n\n7.05\n\nEmployees shall acquire seniority rights based on the length of service while in the bargaining unit.\nAn employee shall not acquire seniority rights during a probationary period of ninety (90) working\ndays or longer period if mutually agreed upon by the Union and the Company and such agreement\nshall not be unreasonably withheld. Once an employee has successfully completed the\nprobationary period, his seniority shall date back to the last day of hiring. Where two (2) or more\nemployees are hired on the same day, their seniority shall be ranked by alphabetical order of their\nrespective last names. Notwithstanding any other provision to the contrary that may be contained\nelsewhere in this Collective Agreement, the Company shall have the right to terminate an employee\nduring his probationary period for less than just cause. In the event a probationary employee\u2019s\nperformance is unsatisfactory the Company will discuss the matter with the Union prior to\ntermination.\n\nThe seniority date of service of an employee in the bargaining unit shall be the determining factor\nin layoffs which result in the reduction of the bargaining unit subject to the provisions of Article 7.03\nherein provided for and recalls from layoff.\n\nWhere the Company reduces the number of employees in the bargaining unit, the employee\naffected by the layoff (defined as a period of seven (7) consecutive working days of no work), shall\nhave the following options:\n\na) he can accept the lay-off or;\nb) he shall be entitled to replace the most junior employee in his classification or;\nc} he shall be entitled to displace the most junior full-time employee in any classification in the\n\nbargaining unit for whose job he immediately possesses the skills, ability, knowledge,\ncompetence and qualifications necessary to perform the work in question;\n\nd) if the affected employee is unable to displace a more junior employee, he shall be deemed\nto be laid-off.\n\ne) employees displaced shall in turn have the same rights as outlined in a) through d) above.\n\nf) in the event that the Company anticipates the lay-off notice of employees to be ninety days\n\n(90) or greater due to shortage of work, the Company and the Union will meet to review\nand discuss the skills, abilities and required training of the impacted employees to\ndetermine the displacement of the most junior full- time employees and respecting seniority.\n\nNo probationary, part-time employees will be retained in the bargaining unit if a full-time employee\nis laid off.\n\nAn employee shall lose all seniority and his employment shall automatically be terminated if any of\nthe following should occur:\n\n{a) he voluntarily leaves the employ of the Company or retires;\n\n(b) he is discharged and not reinstated through the grievance procedure as herein provided\nfor;\n\n(c) he is absent from work for more than three (3) consecutive working days without providing\n\na reasonable explanation which is acceptable to the Company;\n\n(d) he fails to return to work after a lay-off within seven (7) days of the delivery by registered\nmail of notice of recall;\n(e) he fails to return to work upon the conclusion of a leave of absence without providing a\n\nreasonable explanation which is acceptable to the Company;\n\f\n\n--- Page 9 ---\n7.06\n\n7.11\n\n(f) he fails to take a medical examination by a duly qualified medical practitioner when required\nto do so by the Company;\n\n(g) if he is not recalled to work from a lay-off, his name shall be retained on the seniority list for\na minimum of six (6) months, up to a period equal to his bargaining unit seniority as at the\ndate of lay-off, up to a maximum of twelve (12) months;\n\n(h) he is granted a leave of absence and pursues gainful employment elsewhere.\n\nAn employee may accept a position within Saputo and outside of the Bargaining Unit for a period\nof up to twelve (12) months. During this time the employee\u2019s seniority will remain frozen. He will\nnot pay union dues and he will not have rights under the collective agreement. During this period\nthe employee may return to his position within the bargaining unit. At the end of this twelve (12)\nmonth period if the employee does not return to his position then the employee loses his seniority,\nand all rights and advantages provided for in the present agreement.\n\nThe Company shall maintain a seniority list updated on a quarterly basis and upon request with a\ncopy to the Union. Any employee objecting to such seniority list must do so within five (5) working\ndays of the posting of such list.\n\nAn employee's seniority shall continue to accumulate on each occasion that he is absent from work\nbecause of illness, injury or approved absences.\n\nWhen an employee is absent from work because of sickness or disability, he shall not lose seniority\nexcept as provided in Articles 7.05 (c) and (f), of this Agreement. Upon his return to work, he shall\nbe returned to his former position at the applicable rate of pay, provided that such position still exists\nand further provided the returning employee immediately possesses the physical fitness and the\nskills, ability, knowledge, competence and qualifications necessary to perform the work in question.\nin the event that the return of the employee results in the displacement of another employee who\nwas permanently assigned to such position, then the displaced employee shall follow the provisions\nof Article 7.03 (b) that shall apply.\n\nSeverance pay to those employees who are laid-off shall be paid in accordance with the\nEmployment Standards Act of Ontario.\n\nSeverance Pay/Plant Closure\n\nFull-time employees on the payroll with recall rights in accordance with 7.05 (g) shall be paid the\nequivalent of three (3) weeks for each year of service based on their regular hourly rate of pay toa\nmaximum of fifty two (52) weeks. Severance pay which is paid to an employee shall be deemed to\ninclude any severance payments required by law. All severance payments shall be subject to\ndeductions required by law.\n\nAn employee who accepts severance pay shall have no further claim with the Company.\n\nARTICLE 8 - JOB POSTINGS AND VACANCIES\n\nQE E_e\u2014_\u2014\u2014\u2014\u2014\u2014\u2014\u2014 eee ee eee\n\n8.01\n\nIn selecting a candidate to fill a permanent full time vacancy or new job within the bargaining unit\nwhich the Company wishes to fill.\n\nFor plant positions, selection will be on the basis of seniority.\n\nThe Company will post permanent vacancies and new jobs in the bargaining unit which it wishes to\nfill, excluding Lead Hand positions, for seven (7) days (Thursday to Wednesday). Employees may\napply for such posted vacancies, provided that an employee who successfully obtains a posted\nposition shall not be eligible to apply for another posting outside of their respective group for six (6)\nmonths from the date he is awarded the new job.\n\f\n\n--- Page 10 ---\n8.02\n\n8.04\n\n8.05\n\n8.06\n\n8.08\n\nEmployees who work in Milk Receiver, CIP, Process Blend and Lab positions eligibility to apply for\na posted position outside of their respective group (Milk Receiver, CIP, Process Blend and Lab\npositions) shall be at twelve (12) months.\n\nThe posting notice shall identify the department, job identification, shift, start time, classification,\nand will include start rate and end rate of the position. Anticipated weekly schedules will be included\non the job posting with the understanding that schedules are subject to change due to needs of the\nbusiness.\n\nThe Company will fill the position, within four (4) weeks from the removal date specified on the initial\nposting. The Company will endeavor to post original vacancies as soon as possible, and no later\nthan the following job posting cycle. Part time applicants will not be considered until after full time\napplicant the part time employee will be reclassified to full time. Lead Hands shall be selected or\nappointed at the Company's sole discretion but no employee shall be forced to accept a Lead Hand\nassignment.\n\nSkill, qualifications and experience of an employee and their capacity to perform the required tasks\nof the job shall be the determining factor in selection of vacancies for the following classifications\nin the Maintenance, Lab, CIP, Process Blend, Milk Receiver, and Jockey or any other position\nwhere a License/Degree is required.\n\nEmployees wishing to apply for a job posting must do so in writing on forms supplied by the\nCompany and deposited in the secured job posting box. If an-employee applies for more than one\njob at the same time, he must identify the order of preference.\n\nThe first and second vacancy created by filling the original opening under the job posting procedure\nshall be posted as soon as possible and no later than the following job posting cycle. Any\nsubsequent vacancies in the chain caused by the filling of the first three (3) positions shall not be\nsubject to the job posting procedure and may be filled at the Company's discretion with a part time\nemployee. It is understood the same posting procedure set out in 8.01 and 8.02 will be followed for\nother permanent vacancies or new jobs in the bargaining unit which the Company wishes to fill.\n\nA copy of each job posting and successful candidate will be provided to the Chairperson.\n\nWhere no candidate applies who meets the overall criteria in 8.01, then the Company may fill the\njob by first recalling a laid-off employee who meets the overall criteria in 8.01, if one exists, or then\nhiring from outside.\n\nIn the event a grievance involving job posting succeeds, all employees who were involved as a\nresult of the original posting and back up moves will revert to their jobs held immediately prior to\nthe job posting in question.\n\nAn employee who is successful in obtaining a new job through the posting procedure shall be\ntrained for a reasonable time period and shall be on probation in the new job for a period of sixty\n(60) days worked. If the Company determines the employee is unsatisfactory during the probation\nperiod, which shall not be done in an arbitrary manner, the Company will discuss the matter with\nthe union prior to returning to his former job at his former rate of pay, as will others who were\ntransferred or promoted by the reason of the employee\u2019s successful application. The Company will\ncommit to reviewing Shipping SOP\u2019s with employees at crew talks. Copies will be readily available\nupon request and will be located in the Control Room and Dispatch office.\n\nEmployees who wish to change shifts on a permanent basis must do so through the job posting\nprocedure.\n\nThe Company will post temporary openings which are expected to last or has lasted more than\nforty-five (45) days duration. Such temporary openings will be filled in accordance with 8.01, with\nthe exception of Milk Receiver, CIP, Process Blend and/or Lab. Priority will be given to qualified\nemployees with prior/relevant experience in those groups (on the basis of seniority) for any\ntemporary positions in Milk Receiving, CIP, Process Blend and/or Lab. Any subsequent openings\ncaused by filing the original temporary vacancy will be filled at the discretion of the Company. At\n\n10\n\f\n\n--- Page 11 ---\nthe end of the temporary assignment the employee will return to his former job and shift. It is\nunderstood that employees will maintain bidding rights for any full-time positions while filling in the\ntemporary vacancy. Employees will not have bidding rights to any other temporary vacancies while\non a temporary position.\n\nAn employee who is awarded a posting and progresses from a lower, or a higher paying\nclassification shall be moved to the rate of the new classification.\n\nARTICLE 9 - HOURS OF WORK & OVERTIME\n\n\n\n9.01\n\n9.04\n\n9.08\n\nThe work week for full-time employees shall normally consist of forty (40) hours, from Sunday to\nSaturday. It is understood that the Company retains the right to establish various shift configurations\nor the number of hours to be worked, not specifically provided for herein, provided that such shifts\nare in accordance with applicable legislation. Further, nothing herein shall be construed as a\nguarantee of daily or weekly hours to be worked or paid. :\n\nStarting and quitting times and the arrangement of shifts and the assignment of employees to\nparticular shifts shall be determined by the Company at its sole discretion. In the assignment of\nemployees to particular shifts, the Company shall ask by seniority of the employees within the\nrespective group. In addition, the Company undertakes to consider any undue hardship caused to\nan employee by such assignment and will provide as much notice as is possible. It is not the\nintention or desire of the Company to apply the provisions of Articles 9.01and 9.02 in a frivolous or\narbitrary manner, and to that extent the Company confirms that the application of this clause will be\ndone so as to advance or promote the best interests of the business.\n\nIt is not the intention or desire of the Company to apply the provisions of Articles 9.01and 9.02 ina\nfrivolous or arbitrary manner, and to that extent the Company confirms that the application of this\nclause will be done so as to advance or promote the best interests of the business.\n\nWhere the Company determines a change to the shift configurations are required, the Company\nand the Union will meet and discuss the changes prior to implementation.\n\nAll work per day or per week performed other than during the regular scheduled hours of work shall\nbe overtime and shall be paid for at the rate of time and one-half (1 % x) daily.\n\nThe Company will consider hours not worked due to Paid Holidays as contained in Article 11.01 as\ntime worked for purposes of calculating overtime in the week the Paid Holiday is celebrated.\n\nAn employee who is required to work on any of their scheduled days off will be paid at the rate of\ntime and one-half (1 % x).\n\nThere shall be no pyramiding of overtime and/or premiums provided for in this Agreement.\n\nHours in excess of the normal work week shall be allocated at the sole discretion of the Company\nsubject to Letter of Understanding #1.\n\nAn employee\u2019s scheduled starting time shail not be changed by more than two (2) hours during the\nweek in which he is working without his approval.\n\nFull-time employees who are scheduled to work, and who report for work as scheduled shall be\nguaranteed their scheduled hours of work for that day or pay, at their regular rate of pay, in lieu of\nwork. This provision shall not apply in the event of an act of god; fire; flood; or equipment or\ntechnical problems beyond the control of the Company, in which case the employee shall be\nguaranteed four (4) hours work or pay in lieu of work.\n\nAn employee who is called to work / asked to return to work outside of his regular shift hours and\nwho reports on time and remains as long as required will receive not less than four (4) hours of\nwork or pay in lieu of work.\n\f\n\n--- Page 12 ---\n9.09\n\n9.12\n\n9.13\n\n(a)\n\n(b)\n\nWhere an employee works in excess of two (2) hours prior to the start of his scheduled\nshift, he will be granted a paid fifteen (15) minute rest period upon completion of the second\novertime hour.\n\nWhere an employee works in excess of two (2) hours immediately after the end of his\nscheduled shift, he will be allowed to take a fifteen (15) minute paid rest period after he has\ncompleted the two (2) hours and shall be entitled to further paid (15) minutes rest periods\nafter completing each two (2) hours.\n\nThe Company will schedule a thirty (30) minute unpaid lunch period and thirty (30) minutes of paid\nrest time during a shift. The employee shall take the rest periods when instructed to do so.\n\nEmployees shall be paid by direct deposit. Upon request, any pay discrepancies of $200 or greater\ndue to Company error will be resolved on or by the following pay cycle via separate payment.\n\nShift Premiums\n\n(a)\n\n(c)\n\nA shift premium of ninety [90\u00a2] cents per hour will be paid for all hours worked during the\nfollowing times provided that fifty percent [50%] or more of hours worked falls within\npremium hours:\n\nMonday, Tuesday, Wednesday and Thursday - two (2:00) p.m. to ten-thirty (10:30) p.m.\n\nA shift premium of one dollar [$1.00] per hour will be paid for all hours worked during the\nfollowing times provided that fifty percent [50%] or more of hours worked falls within\npremium hours:\n\nMonday, Tuesday, Wednesday and Thursday \u2014 ten (10:00) p.m. to six (6:30) thirty a.m.\n\nA shift premium of one dollar and thirty cents [$1.30] per hour will be paid for all hours\nworked during the following times provided that fifty percent [50%] or more of hours worked\nfalis within premium hours:\n\nSaturday and Sunday six [6:00] a.m. to two-thirty [2:30] p.m.\n\nA shift premium of one dollar and 55 cents [$1.55] per hour will be paid for all hours worked\nduring the following times provided that fifty percent [50%] or more of hours worked falls\nwithin premium hours:\n\nFriday, Saturday and Sunday two [2:00] p.m. to ten-thirty [1 0:30] p.m.\nA shift premium of one doliar and 60 cents [$1.60] per hour will be paid for all hours worked\nduring the following times provided that fifty percent [50%] or more of hours worked falls\n\nwithin premium hours:\n\nFriday, Saturday and Sunday ten [10:00] p.m. to six-thirty [6:30] a.m.\n\nThe Company will continue to post schedules as soon as possible but will post no later than\nTuesday afternoon in advance for the following two (2) weeks. Where there are extenuating\ncircumstances and Management must revise an employee schedule after the Tuesday deadline,\nthe Company will communicate the change to the affected employee.\n\nARTICLE 10 - VACATIONS\n\n\n\n10.01 Vacations with pay will be granted by the Company in accordance with the following schedule, the\ngreater of weeks or percentage:\n\n(a)\n\none (1) and less than five (5) years of continuous service - two (2) weeks; 4%\n\f\n\n--- Page 13 ---\n10.02\n\n10.03\n\n10.04\n\n10.05\n\n10.06\n\n10.07\n\n10.08\n\n10.09\n\n(b) five (5) years and less than ten (10) years of continuous service - three (3) weeks; 6%\n(c) ten (10) and less than eighteen (18) years of continuous service - four (4) weeks; 8%\n(d) eighteen (18) years or more of continuous service - five (5) weeks; 10%\n\n(e) twenty-five (25) years or more of continuous service \u2014 six (6) weeks; 12 %\n\nFor the purposes of computing vacations, continuous service will be calculated as of the employee's\nseniority date. On a go forward basis, employees hired after the ratification of 2022 agreement, for\nthe purpose of computing vacations, continuous service will be calculated as of the employee's hire\ndate. The vacation year runs from May\u2018st to the following April 30\".\n\nVacation pay allowance referred to in this Article will be the greater of the employee\u2019s regular hourly\nrate of pay multiplied by forty (40) hours for each week of entitlement based on the scheduled\npercentage scale for continuous service as per Article 10.01. The term \u201cearnings\u201d shall be as\ndefined in the Employment Standards Act of Ontario.\n\nEmployees with less than one (1) year of continuous service as of May 1* will be entitled to vacation\npay in accordance with the Employment Standards Act of Ontario.\n\nWhere a Paid Holiday as provided for in this Agreement occurs during an employee\u2019s vacation\nperiod, the employee shall have the option to take another day in lieu thereof,-scheduled by mutual\nagreement for a day that is no later than three (3) months after the paid holiday for which it\nwas earned. The employee must request the substitute day within five (5) working days prior\nto their vacation or no later than five (5) working days upon returning to work from their\nvacation\n\nThe vacation schedule for the bargaining unit shall be posted by March 1st of each year and\nemployees shall have the right to select vacation time in accordance with seniority. The Company\nis entitled to maintain a work force which is sufficient to perform the work and therefore reserves\nthe right to refuse any request for vacation time and to have such vacation time rescheduled for an\nalternate date. The Company undertakes to give consideration to any undue hardship suffered by\nthe employee as a result of such rescheduling and the Company shall not unreasonably deny.\n\nEmployees with three (3) weeks or less vacation entitlement may be allowed to split 1 week.\n\nEmployees with more than three (3) weeks vacation entitlement may be allowed to split any\nadditional vacation. No more than two (2) weeks of vacation may be split in any vacation year.\n\nNo more than two (2) weeks can be carried over from year to year. Carry over vacation will not be\npaid out at end of a vacation year.\n\nIf an employee has not scheduled his outstanding current year vacation that is not allowed to be\ncarried over or split by February 1st of the vacation year, then the Company may schedule the\nremaining vacation to be used by April 30th of the current vacation year.\n\nAny vacation requested outside of 10.06 must be submitted with the vacation request form fifteen\n(15) working days in advance of the date requested; the Company will notify the employee within\nfive (5) working days. In the event the Company does not respond within five (5) working days, the\nvacation requested shall be granted.\n\f\n\n--- Page 14 ---\nARTICLE 11 - PAID HOLIDAY\n\n\n\n11.01\n\n11.02\n\n11.03\n\n11.04\n\n11.05\n\nThe following Paid Holidays shall be recognized as legal holidays:\n\nNew Year\u2019s Day Civic Holiday\nFamily Day Labour Day\nGood Friday Thanksgiving Day\nVictoria Day Christmas Day\nCanada Day Boxing Day\n\nNational Day of Truth and Reconciliation\n\nIn the event that the federal or provincial government should declare any other day(s) a legal\nholiday, the Company agrees to recognize such day(s) as a Paid Holiday.\n\nFloater Day\n\nAll full-time employees who were active on payroll on the effective date and each anniversary date\nof the collective agreement, will be eligible for one (1) floater day.\n\nA Floater Day must be used by June 23% of each year, and cannot be carried over to the following\nyear. An unused floater day will be forfeited for that reference year.\n\nTo qualify for pay for a Paid Holiday, the employee:\n\na) must work his last scheduled working day preceding the Paid Holiday and his first scheduled\nworking day after the Paid Holiday, unless he was absent with permission.\n\nb) Holiday pay to be calculated as per the Employment Standards Act of Ontario.\n\nShould a Paid Holiday occur during an employee's leave of absence; he shall not be paid for such\nPaid Holiday.\n\nTo meet the needs of the business, the Company reserves the right to require employees to work\non any of the paid holidays as provided for herein. When doing so the Company must give\nconsideration to seniority.\n\nWhere an employee works on a holiday, he will receive one and one-half (1 %) times his regular\nstraight time hourly rate as well as payment for the holiday or a substituted day off. A substitute\nholiday will be scheduled by mutual agreement for a day that is no later than three (3) months after\nthe public holiday for which it was earned.\n\nARTICLE 12 - NOTICE OF ABSENCE & LEAVE OF ABSENCE\n\nARS ee eee\n\n12.01\n\n12.02\n\nEmployees are expected to attend work regularly. Employees shall notify the appropriate persons\ndesignated by the Company of their intent to be absent prior to the commencement of their shift,\ngiving the reason why the employee is unable to report, when he expects to return to work and how\nhe can be reached relative to his absence.\n\nAn employee who wishes a leave of absence for legitimate personal reasons shall make such\nrequest in writing to the Company, at least one (1) month in advance of the proposed\ncommencement date of such leave of absence, except in the case of personal emergency. The\nemployee\u2019s request shall contain:\n\n\u2014his reason for the proposed absence;\n\n\u2014 the commencement date of the proposed leave of absence;\n\u2014 the length of the proposed leave of absence;\n\n- the Company shall reply within two (2) weeks\n\n14\n\f\n\n--- Page 15 ---\n12.03\n\n12.04\n\n12.05\n\nThe permission of the Company will not be unreasonably withheld.\n\nThe Company agrees that two (2) employees appointed/elected by the Union as a full time\nrepresentative shall be granted a leave of absence without pay while serving in such capacity. Such\npersons shall continue to accumulate seniority for a period up to thirty-six (36) months.\n\nParental and Pregnancy Leave shall be granted in accordance with the Employment Standards Act\nof Ontario\n\nThe Company will not grant an employee\u2019s request for a leave of absence for the purpose of\nemployment with another company, or becoming self employed.\n\nARTICLE 13 - BEREAVEMENT LEAVE\n\nee\n\n13.01\n\n13.02\n13.03\n\nThe Company agrees that in the event of bereavement the employees shall be entitled to\nsuccessive days off per the relationship schedule below.\n\nThe employee will be paid for the days he would otherwise have worked, for his regular schedules\nhours at his regular hourly rate.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n[ Relationship Days Off\nParents/Step Parents 5 days\nSpouse 5 days\n\n| Children 5 days\nBrother or Sister 5 days\nGrandparents/Grandchildren 3 days\nIn laws - Mother/ Father, Brother/Sister, Son/Daughter 3 days\n\n\n\n\n\nUnpaid leave of absences for bereavement leaves requiring travel may be granted.\n\nThe Company will provide forty-eight (48) hours of paid time per calendar year; to be used as\nSick Leave and/or Family Responsibility Leave as defined by the Ontario Employment Standards\nAct. Any unused hours will be paid out at the end of each calendar year. Entitlement for new\nhires/or employees who accept a full-time position in the bargaining unit will be prorated based on\ntheir full-time hire date.\n\nARTICLE 14 - JURY DUTY\n\n\n\n14.01\n\n14.02\n\n14.03\n\n14.04\n\nAn employee who is required, during the selection process and while serving as a member on a\njury shall be compensated for days actually spent on jury duty when he would otherwise have been\nat work.\n\nSuch an employee shall receive the difference between his jury fees and his normal day\u2019s pay for\nthat time he would have been regularly employed had he not been serving on the jury. The\nemployee shall be required to report immediately upon being excused or released from jury duty\nwhen such reporting is reasonable under the circumstances.\n\nThe claim of an employee shall be verified by presentation of his jury duty cheque; however, no\npayment shall be made for any hour for which the employee receives compensation by the\nCompany for any other reason. Payment shall not be withheld pending submission of the jury duty\ncheque.\n\nAny employee subpoenaed to attend as a witness on behalf of the Company or the Crown shall be\nentitled to the difference between his witness fee and his normal day\u2019s pay.\n\f\n\n--- Page 16 ---\nARTICLE 15 - UNIFORMS\n\n\n\n15.01\n\n15.02\n\n15.03\n\nThe Company will issue uniform sets at the start of permanent employment. One (1) parka will be\nissued where required. These will be personally monogrammed for each employee. The uniforms\nshall be returned for replacement when worn out. Such replacement must be pre-authorized by\nthe Company.\n\nAppropriate coveralls for storage personnel will also be stocked, and issued as above.\n\nIt is a condition of employment that all employees covered by Article 1.01 of this Agreement wear\nsafety shoes at all times while on duty. The Company will pay up to $255 per calendar year for\nsafety shoes provided the employee has completed their probationary period. The Company shall\ndetermine the location and shall specify the safety shoes to be purchased. There will be no limit on\nthe maximum number of pairs, however employees must have the Company's approval.\nEmployees within their probationary period shall be required to purchase their own safety shoes in\naccordance with the above and shall be reimbursed upon successful completion of their\nprobationary period.\n\nSafety footwear must be in good repair; capable of protecting the employee\u2019s feet in a manner they\nwere originally designed to do. |.A.P.A. guidelines will be used as the determining factor when\nquality of footwear is in question.\n\nARTICLE 16 - GENDER\n\n\n\n16.01\n\nWherever the masculine gender is used in this Agreement, it shall be deemed to include the\nfeminine.\n\nARTICLE 17 - DISCRIMINATION\n\n\n\n17.01\n\nThe Employer and the Union agree that female employees may sometimes need to discuss matters\nsuch as Harassment / Intimidation, violence or abuse at home, substance abuse and other\nconfidential matters. The Company will recognize a Women\u2019s Advocate to be appointed by the In-\nplant elected Leadership Committee.\n\nThe Employer and the Union agree that Black, Indigenous and Racialized employees may\nsometimes need to discuss concerns related to racial discrimination and racial violence. The\nCompany also recognizes a Racial Justice Advocate role appointed by the in-plant elected\nLeadership Committee.\n\nThe Company and the Union agree that there will be no discrimination against any employee which\nis contrary to the Human Rights Code.\n\nThe Company and the Union agree there will be no violence or harassment against any employee\nwhich is contrary to the Ontario Occupational Health and Safety Act and Saputo\u2019s policies.\n\nThe Company will endeavor to educate Saputo Company Policy to employees. The Company\nagrees to provide a copy of the information poster to the in-plant committee forty-eight (48) hours\nprior to posting on Company boards.\n\nBoth parties agree that any complaint of harassment, bullying and violence will be investigated in a\ntimely manner via a joint investigation committee.\n\nThe joint committee will be responsible to present a joint summary of the findings.\n\f\n\n--- Page 17 ---\nAll Union committee members must receive the Unifor Workplace Harassment Investigation\nTraining and future refresher or advance training courses.\n\nARTICLE 18 - HEALTH, SAFETY AND ENVIRONMENTAL\n\n18.01\n\n18.02\n\n18.03\n\n18.04\n\n18.05\n\n18.06\n\nThe Company shall make reasonable provisions for the health and safety of employees during the\nhours of their employment.\n\n(a) A safety committee of not less than six (6) employees, with equal representation from the\nUnion and Company shall be formed to recommend action on safety and environmental\nmatters. The three (3) Health and Safety employee representatives and the three (3)\nalternate Health and Safety representatives will be appointed by the in-plant elected\nLeadership Committee.\n\n(b) The safety committee shall meet monthly and shall operate in accordance with the\nprovisions of the Occupational Health and Safety Act as amended from time to time.\n\n(c) The Joint Health and Safety committee Union co-chair representing employees, or in his\nabsence his designated fellow employee, shall be allowed to accompany a Ministry of\nLabour inspector on an inspection tour and to speak with the inspector.\n\n(d) A worker representative member of the Joint Health and Safety committee shall fully\nparticipate in all accident investigations.\n\nAn employee who is injured on the job during working hours and who is medically unfit to return to\nwork shall be paid for the balance of his scheduled hours for the day upon which the injury occurred.\n\n{a) Each year on April 28 at 11:00 a.m., work will stop and one minute of silence will be\nobserved in memory of workers killed or injured on the job.\n\n(b) Each year on March 21 at 11:00 a.m., work will stop, and one (1) minute of silence will be\nobserved as for the International Day for the Elimination of Racial Discrimination.\n\nThe Company will cover the cost of all prescription safety glasses to a maximum of three hundred\nand fifty ($350) every two years, where the required and with preapproval.\n\nNo employee would be demanded to work alone where there is a health and safety concern.\n\nARTICLE 19 - GENERAL\n\n19.01\n\n19.02\n\n19.03\n\nEmployees shall promptly report to the Company any loss of product, damage to property or\nequipment or shortage of merchandise and where possible, give a statement indicating the cause\nthereof. Failure to do so can result in disciplinary action up to and including discharge.\n\nThe Union agrees that it will encourage its members to uphold the rules and regulations of the\nCompany in regard to punctual and steady attendance, proper and sufficient notification in case of\nabsence and conduct on the job.\n\nAttached hereto and forming part of this Agreement are the following appendices:\n\nAppendix \u201cA\u201d - Part-time employees\nAppendix \u201cB\" - Wages/Classifications\nAppendix \u201cC\u201d - Health & Welfare - Pension\n\nLetter of Understanding #1\nLetter of Understanding #2\nLetter of Understanding #3\n\f\n\n--- Page 18 ---\nLetter of Understanding #4\nLetter of Understanding #5\nLetter of Understanding #6\nLetter of Understanding #7\nLetter of Understanding #8\nLetter of Understanding #9\nLetter of Understanding #10\nLetter of Intent #1\n\n19.04 The Union agrees to co-operate in any endeavor to correct inefficiencies of employees.\n\n19.05 Paid Education Leave\nThe Company will contribute five thousand ($5000.00) annually to the Paid Education Leave fund.\nSaid paid education leaves will be for the purpose of upgrading the employee\u2019s skills in all aspects\nof trade union functions. Contributions to the Fund will be made in June each year. Contributions\nto be made payable to UNIFOR Paid Education Leave Fund and remitted to the Union at 115\nGordon Baker Road, Toronto, Ontario M2H OA8.\n\n19.06 Social Justice Fund\nThe Company will contribute one thousand ($1000.00) dollars annually to the UNIFOR Social\nJustice Fund. Contributions to the Fund will be made in June of each year. Contributions to be\n\nmade payable to UNIFOR. Social Justice fund and remitted to the Union at 115 Gordon Baker\nRoad, Toronto, Ontario M2H OA8.\n\nARTICLE 20 - TERM OF AGREEMENT\n\n\n\n20.01 Unless changed by mutual consent, this Agreement shall continue in full force and effect for a period\nof three (3) years, commencing the date of June 23, 2025, and expiring on the date of June 23,\n2028, and shall continue automatically thereafter for one (1) year period unless one (1) of the parties\nhereto notifies the other party within ninety (90) days immediately prior to the expiration date, that\nit desires to amend the Agreement.\n\n20.02 It is understood that, during any negotiations following upon notice of termination or notice of\namendment, either party may bring forward counter proposals arising out of or related to the original\nproposals.\n\n20.03 The Company agrees to pay the cost of the printing of the new Collective Agreement by a Union\nprinter. Copies will be made available within three (3) months upon ratification of the Collective\n\nAgreement. The Company will agree to provide an electronic PDF copy of the Collective Agreement\nto the Plant Chair and Local 1285 representative.\n\nDated at Halton Hills, Ontario this 24th day of June, 20285.\n\nFOR THE COMPANY FOR THE UNION\n{\n\n\u00a2\nGuy Malboeuf\n\nyn . -\nJenniferFrankin mee\n\n\n\n\n\nJermaine Bramwell\n\f\n\n--- Page 19 ---\nGiovanni Fasulo\n19\nJustin Connolly\nJ,llUJ.Jj J,\u0003\nGerald Jewer\n:\nQ\u0004lliJ\u0005\nDustin Hedley\n:tb11iMt'I\ne.4- f,h,\u0003\nAminder Brar\nsurj.4singh\n\n--- Page 20 ---\nAPPENDIX \u201cA\u201d PART-TIME EMPLOYEES\n\n\n\nA-1\n\nA-2\n\nThe Company and the Union agree that part-time employees are not entitled to any of the rights or\nbenefits of this Agreement, or any Appendix to this Agreement, unless specifically provided for.\n\nThe following are the terms and conditions relating to the employment of part-time employees. In\nthe event of a conflict between the terms of this Appendix and the main body of this Agreement or\nany Appendix thereof, the terms of this Appendix shall prevail.\n\nPart-time employees shall not normally work more than thirty-two (32) hours per hours per week\nexcept:\n\n(a) during the period from the week of Victoria Day through to the end of the week of Labour\nDay;\n\n{b) during the period from December 1 up to and including January 15;\n\n(c) during other peak business periods or staff shortages to be mutually agreed by the\nCompany and Union. The Union will not unreasonably deny such a request;\n\n(d) when replacing a full-time employee who is absent for any reason whatsoever, for the\nduration of such absence, and the parties agree that the Company can utilize any\ncombination of part-time employees to replace such absent full-time employee.\n\nPart-time employees who work more than thirty-two (32) hours per week, outside of the periods set\nforth in Article A - 3 herein, for more than twelve (12) continuous weeks, shall be converted to full-\ntime status.\n\nPart-time employees shall be entitled to vacation pay as provided for in the Employment Standards\nAct of Ontario. The hire date will apply for vacation accrual entitlement.\n\nWhenever a part-time employee is converted to full-time he will be credited in the full-time\nbargaining unit for seniority purposes with fifty percent (50%) of his seniority. A part-time employee\nshall be required to serve a 60-day probationary period upon moving to full-time status, and upon\nsuccessful completion of the probationary period, his seniority will apply in the full-time bargaining\nunit, Full time date of hire will apply to the waiting period for benefits that may be provided by the\nCompany.\n\nOvertime is not voluntary for part-time employees. A part-time employee shall be paid at the rate\n\nof one and one half (1%) times his regular rate for all hours of work which he performs in excess of\nforty (40) in one calendar week.\n\nA part-time employee shall automatically be terminated if any of the following should occur:\n\n(a) he voluntarily leaves the employ of the Company;\n(b) he is discharged and not reinstated through the Grievance procedure;\n(c) he fails to return to work after a lay-off within seven (7) days of the delivery by registered\n\nmail of notice of recall;\n\n(d) he fails to return to work upon the conclusion of a leave of absence without providing an\nexplanation which is acceptable to the Company;\n\n(e) he fails to take a medical examination by a duly qualified medical practitioner when required\nto do so by the Company;\n\n(fy his record of attendance is unacceptable to the Company;\n\n20\n\f\n\n--- Page 21 ---\n(g) he fails to comply with production/performance levels established by the Company from\n\ntime to time;\n\n(h) he refuses an offer of work on three (3) occasions within any three (3) month period without\nproviding an explanation which is acceptable to the Company;\n\n{i) his attitude, suitability and adaptability are not at a level which is acceptable to the\nCompany.\n\nIn addition to the terms and conditions set forth in this Appendix, part-time employees shall also be\nentitled to the privileges of the following provisions of the Collective Agreement:\n\n- Article 1\n\n- Article 3\n\n- Article 4\n\n- Article 5\n\n- Article 6\n\n- Article 8\n\n- Article 9.04, 9.05 and 9.06\n- Article 12.01, 12.02 and 12.04\n- Article 14\n\n- Article 15\n\n- Article 16\n\n- Article 17\n\n- Article 18\n\n- Article 19.01 and 19.02\n\n- Article 20\n\nand any other Articles that specifically refers to part-time employees, as the case may be.\n\n21\n\f\n\n--- Page 22 ---\nAPPENDIX \u201cB\u201d \u2014 WAGES / CLASSIFICATIONS\n\nae eee Se eee\n\nB-1.1\n\nEffective Monday, June 23, 2025, the following are the minimum hourly rates of pay for all employees\ndescribed in Article 1.01 of this agreement:\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nClassification Start 6 months 12 months 18 months 24 months\n| General Help $ 22.14 $ 22.88 $ 23.61 $ 26.68 $ 20.74\nSkilled Worker $ 24.32 $ 25.11 $ 25.85 $ 29.01 $ 32.16\nJockey $ 28.89 $ 29.65 $ 30.40 $ 32.27 $ 34.14\nLab/CIP/Process | $ 28.89 $ 29.65 $ 30.40 $ 32.27 $ 34.14\nBlend/Milk\n\nReceiver iL\n\nB-1.2\n\nEffective Sunday, June 21, 2026, the following are the minimum hourly rates of pay for all employees\ndescribed in Article 1.01 of this agreement:\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nClassification Start 6 months 12 months 18 months 24 months\nGeneral Help $ 22.81 $ 23.57 $ 24.32 $ 27.48 $ 30.64\nSkilled Worker $ 25.04 $ 25.86 $ 26.63 $ 29.88 $ 33.12\nJockey $ 29.76 $ 30.54 $ 31.31 $ 33.24 $ 35.17\nLab/CIP/Process $ 29.76 $ 30.54 $ 31.31 $ 33.24 $ 35.17\nBlend/Milk\n\nReceiver\n\nB-1.3\n\nEffective Sunday, June 20, 2027, the following are the minimum hourly rates of pay for all employees\ndescribed in Article 1.01 of this agreement:\n\n\n\n=\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nClassification Start 6 months 12 months 18 months 24 months\nGeneral Help 32349 | \u00a7 24.27 \u00a7 25.05 5 28.30 \u00a7 31.56\nSkilled Worker | $ 2580 | $ 2663 $2743. | $ 30.77 \u00a7 34.12\nJockey | $ 3065 |$ 31.46 $ 32.25 \u00a7 34.24 $ 36.22\nLab/GlPiProcess | $ 3065 | $ 31.46 \u00a7 32.25 $34.24 $ 36.22\nBlend/Milk\n| Receiver\n\n\n\n\n\f\n\n--- Page 23 ---\nB-1.4 Maintenance\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nJune 23, June 23, June 21, June 21, June 20, June 20,\n2025 | 2025 2026 2026 2027 2027\nProbationary | Top Rate Probationary | Top Rate Probationary | Top Rate\nClassification | Rate Rate Rate\nLicensed\n|_ $ 44.02 $ 46.34 $ 45.34 $ 47.73 $ 46.70 $ 49.16\nUnlicensed |\n$ 38.27 $ 40.29 $ 39.42 $ 41.50 $ 40.60 $ 42.74\n\n\n\nB-1.5 Part-Time Wage Grid\n\nClassification | June 23, 2025 | June 21, 2026 June 20, 2027\nPart-Time $ 23.78 $ 24.50 $ 25.23\n\n\n\n\n\nB-1 Inthe application and interpretation of Article B - 1 as herein provided for, it is understood that Non\u2014\nLicensed Mechanics hired prior to December 20, 2003 are Grandfathered into the Licensed\n\nclassification.\n\nB-2 Classifications that existed prior to the date of the endorsement of this Agreement by the Ontario\nLabour Relations Board (OLRB), have been deleted or merged with other classifications as\n\nprovided for herein. For clarity, the following shall apply:\n(a) those employees formerly classified as:\n\n- Checker\n- Loader\nUtility Production\n- Utility Storage\n- Spare Production\n- Spare Storage\n- Process Helper/Milk\n- Creamer Operator\n- Material Handler\n- Filler Operator\n- CIP Cleaner/Sanitation\n- Order Picker\n- Palletizer\n\nhave been reclassified as \u201cSkilled Worker\u201d\n{b) those employees formerly classified as:\n- Product Recovery\n- Returns Receiver\n- Returns Dumper\n- Fork Lift Operator\n- Cultured Products Packer\nhave been reclassified as \u201cGeneral Help\u201d\n(c) those employees formerly classified as:\n\n- Relief\n\n23\n\f\n\n--- Page 24 ---\nhave been reclassified as \u201cPart-time\u201d\n(d) the following classification has been eliminated:\n- Category G\n(e) Raw Milk Receiver to be re-classified as Jockey/Milk Receiver\nMaintenance Premium\n\nThe Company shall provide a seventy-five cents ($0.75) per hour premium for all hours worked\nto all employees classified as Maintenance for the duration of the collective agreement.\n\nTool Allowance\n\nEffective June 2025, a Tool Allowance shall be paid to the Maintenance employees at the rate of\neight hundred and thirty ($830) doliars. Effective June 2026, the tool allowance will increase to\neight hundred and eighty ($880) doliars. Effective June 2027, the tool allowance will increase\nto nine hundred and thirty ($930) dollars. Receipts must be submitted for reimbursement.\n\nStandby Premium\n\nIn any week where the Company requires a maintenance department employee to be on standby\nit will pay a standby premium of sixty-five ($65) dollars per week to such employee with the\nunderstanding the employee who agrees to be on standby must report to work when called in.\n\nLeadership Premium\n\nWhere the Company appoints an employee to provide leadership to his fellow coworkers, he shall\nbe provided with an hourly leadership premium of $1.50 for all hours worked. It is understood that\nthe selection and appointment of such individuals will be at the Company's discretion with the\nmutual agreement of the employee. The Union must also be in agreement with the granting of such\npremium except in the case of Lead Hands and trainers.\n\nCompany to retain General Help Category and transfer existing General Help at time of ratification\nto current Skilled Worker Category, (will require update to job description).\n\n24\n\f\n\n--- Page 25 ---\nAPPENDIX \u201cC\u201d - HEALTH & WELFARE - PENSION\n\neee Oe ee eee\n\nc-1\n\nThe Company will continue to provide Health and Welfare benefits to full-time employees covered\nby this collective agreement or a comparable substituted benefits plan. Where the Company\nsubstitutes a comparable plan, it shall first meet with the Union and discuss the changes prior to\nimplementation.\n\nAll full-time employees of the Company are eligible for insurance on the following dates:\n\n(a) for life insurance (sixty-five thousand $65,000.00 dollars), accidental death and\ndismemberment, semi-private hospital and ambulance expense insurance, on the first day\nof the month following the completion of his probation period;\n\n(b) for weekly indemnity insurance, on the first day of the month following the completion of his\nprobation period to increase to 66.67 %.\n\n(c) for prescription drug expense insurance, optical and dental expense insurance, on\ncompletion of three (3) months of continuous full-time employment;\n\n(d) for massage therapy, and/or chiropractic, to be combined annual maximum of $800. A\nmedical note will not be required for these services;\n\nOrthodontic coverage: $2000.00;\n\nPrescribed drugs for the treatment of erectile dysfunction up to an annual maximum of five\nhundred ($500.00);\n\n(e) for long term disability insurance, on the completion of one (1) year of continuous full-time\nemployment provided an employee has attained age 18 and has not attained normal\nretirement age.\n\n(f) for psychologist and/or social worker a combined annual maximum of one thousand\n($1000.00) annually\n\nSharing of Costs\nEligible employees shall contribute the following amounts towards the cost of the benefits plan:\n\ne One and one-half (1.5%) percent of their gross regular [non-overtime] earnings for full\nfamily coverage, towards the cost of the benefits provided.\n\n\u00ab One (1%) percent of their gross regular [non-overtime] earnings for full single coverage,\ntowards the cost of the benefits provided.\n\n\u00a2 One-half (.5%) of a percent of their gross regular [non-overtime] earnings for partial single\ncoverage, towards the cost of the benefits provided.\n\nEmployees on leave of absence or other inactive status (excluding Short term disability and\nWorkers Compensation) shall not be entitled to any benefit coverage.\n\nEmployees on layoff, benefits coverage will continue to the end of the calendar month in which the\nemployee was laid off.\n\nPension Plan\n\nEffective at the ratification of the 2025 Collective Bargaining Agreement, the Company agrees to\n\ncontribute seventy-five ($75.00) dollars weekly for each eligible full-time employee to the\ndesignated pension plan. Effective on June 21, 2026, the Company will increase the contribution\n\n25\n\f\n\n--- Page 26 ---\nto seventy-seven ($77.00) dollars weekly for each eligible full-time employee. Effective on June\n20, 2027, the Company will increase the contribution to eighty ($80.00) dollars weekly for each\neligible full-time employee.\n\nThe parties also agree that the Saputo Union members will be eligible to contribute\nvoluntarily to the pension with a weekly contribution.\n\nBargaining unit members aged 65 and older are enrolled in the Group Benefits Plan. For\ngreater certainty, it is agreed that the bargaining unit members aged 65 and older will be\nprovided with Extended Health Care, Emergency Travel Assistance and Dental Care.\n\nThere will be no change to Life Insurance Coverage and Accidental Death and\nDismemberment Insurance benefits which were previously provided to bargaining unit\nmembers aged 65 and over as outlined in the Plan. There will further be no change to Short-\nterm and Long-term Disability coverage entitlement (coverage ends at retirement or upon\nreaching age 65, whichever comes first).\n\n26\n\f\n\n--- Page 27 ---\nLETTER OF UNDERSTANDING #1\nbetween\n\nSaputo Dairy Products Canada G.P.\n(hereinafter referred to as the \u201cCOMPANY\u201d)\n\nand\n\nUNIFOR AND IT\u2019S Local 1285\n(hereinafter referred to as the \u201cUNION\u201d)\n\nA departmental overtime sign-up list will be posted during the last week of each quarter effective for the\nfollowing Quarter.\n\nOvertime on each shift will be equitably distributed among those employees in the department by lowest\nhours, Overtime hours will be reset to zero on the following dates;\n\nJanuary 1s, April 18, July 18, October 1%\n\nDistribution of Overtime for partial shifts will be as follows:\n\n1. To qualified employees currently on the job who have signed up on the list for the quarter.\n\n2. To qualified employees currently within the department who have signed up on the list for that\nquarter.\n\n3. To qualified employees currently on the job but who have not signed up on the list for that\nquarter.\n\nTo qualified employees currently not at work who have signed up on the list for that quarter.\nTo qualified employees currently not at work who have not signed up on the list for that quarter.\n\nDistribution of overtime for full shifts will follow Step 4.\n\nDistribution of overtime for full shifts will follow Step 4.\nIn the event of a three shifts operation full-shift overtime will be split between the two other shifts.\nThe Company will maintain the present practice for missed overtime opportunities and endeavor to equalize\n\novertime amongst employees who have signed up on the departmental overtime list.\n\nOn a weekly basis, information concerning equalization of hours status will be openly displayed in the\ndepartment in a manner that the employees involved may check their standing.0\n\nDated at Halton Hills, Ontario this 24th day of June, 2025.\n\nFOR THE COMPANY FOR THE UNION\n\nHA\n\nBoa\n\f\n\n--- Page 28 ---\nLETTER OF UNDERSTANDING #2\nbetween\n\nSaputo Dairy Products Canada G.P.\n(hereinafter referred to as the \u201cCOMPANY\u201d)\n\nand\n\nUNIFOR AND IT\u2019S Local 1285\n(hereinafter referred to as the \u201cUNION\u201d)\n\nIn the event that the Company transfers part or the entirety of the business from Halton Hills to another\nlocation, the Company will agree to discuss this issue with the Union and the possibility of employment\n\nopportunities to the new location.\n\nDated at Halton Hills, Ontario this 24th day of June, 2025.\n\nFOR THE COMPANY FOR THE UNION\n\n= \u2014-\n\n\u2018\u201c F\n\n28\n\f\n\n--- Page 29 ---\nLETTER OF UNDERSTANDING #3\n\n\n\nbetween\n\nSaputo Dairy Products Canada G.P.\n(hereinafter referred to as the \u201cCOMPANY\u201d)\n\nand\n\nUNIJFOR AND IT\u2019S Local 1285\n(hereinafter referred to as the \u201cUNION\u201d)\n\nThis Letter of Understanding shall confirm the Company's commitment concerning Training for\nMaintenance employees to the effect that:\n\nDuring the term of the collective agreement the Company will pay, provide or arrange for the following\ntraining for maintenance employees:\n\n3 employees welding (1 per year)\n2 employees PLC\u2019s\n3 employees carton machines (1 per year)\n5 employees inkjet coding\nThe company will use experts and the training may take place off-site or in the plant as best suits the training\n\nobjective. The inkjet coding training will take place on-site. The other training may be on-site if mutually\nagreed and failing mutual agreement it will be held off-site.\n\nDated at Halton Hills, Ontario this 24th day of June, 2025.\n\nFOR THE COMPANY FOR THE UNION\n\n/\na ee\n\n_\n\n=<\n\u2014\\\n\n29\n\f\n\n--- Page 30 ---\nLETTER OF UNDERSTANDING #4\nbetween\n\nSaputo Dairy Products Canada G.P.\n(hereinafter referred to as the \u201cCOMPANY\u201d)\n\nand\n\nUNIFOR AND ITS Local 1285\n(hereinafter referred to as the \u201cUNION\u201d)\n\nThis Letter of Understanding shall confirm the Company\u2019s commitment concerning Outside Maintenance\ncontractors to the effect that:\n\nDuring the term of the collective agreement the Company will utilize its maintenance employees before\ncontractors, provided however, they are trained, readily available and willing to perform the required work.\nIt is recognized by both parties that the Company will need to also use contractors. Where the Union\n\nbelieves the use of contractors is resulting in underutilization of maintenance employees or the Company\nhas concerns over abuse of overtime claims, the parties will meet to review the situation.\n\nDated at Halton Hills, Ontario this 24th day of June, 2025.\n\nFOR THE COMPANY FOR THE UNION\n\nBe a\n\n=<\n\u2014\\\n\n30\n\f\n\n--- Page 31 ---\nLETTER OF UNDERSTANDING #5\n\n\n\nbetween\n\nSaputo Dairy Products Canada G.P.\n(hereinafter referred to as the \u201cCOMPANY\u201d)\n\nand\n\nUNIFOR AND IT\u2019S Local 1285\n(hereinafter referred to as the \u201cUNION\u201d)\n\nThe Company agrees to establish a subcommittee of the Joint Labour Management Committee whose\nmandate is to review the feasibility of establishing schedules with consecutive days off.\n\nA meeting to review such feasibility will take place within four (4) weeks of the date of ratification of the\n2022 Collective Agreement. The subcommittee mentioned above will meet monthly or as required with the\nintent to develop a mutually agreeable working schedule subject to the needs of the business.\n\nDated at Halton Hills, Ontario this 24th day of June, 2025.\n\nFOR THE COMPANY FOR THE UNION\n\n~ \u201cK- B\ni Po A\n\n31\n\f\n\n--- Page 32 ---\nLETTER OF UNDERSTANDING #6\n\n\n\nbetween\n\nSaputo Dairy Products Canada G.P.\n(hereinafter referred to as the \u201cCOMPANY\u201d)\n\nand\n\nUNIFOR AND IT\u2019S Local 1285\n(hereinafter referred to as the \u201cUNION\u201d)\n\nRe: Health and Welfare Benefits\n\nBoth parties agree that after lengthy discussions in the 2022 negotiations that they will meet annually\nduring the terms of the collective agreement to review the cost of benefits. During these meetings, the\nparties will review the total costs. Both parties acknowledge that the cost of the comprehensive benefit\npackage is increasing and threatens our ability to remain competitive in the market and industry.\n\nDated at Halton Hills, Ontario this 24th day of June, 2025.\n\nFOR THE COMPANY FOR THE UNION\n\nHA\n\n32\n\f\n\n--- Page 33 ---\nLETTER OF UNDERSTANDING #7\n\n\n\nbetween\n\nSaputo Dairy Products Canada G.P.\n(hereinafter referred to as the \u201cCOMPANY\u201d)\n\nand\n\nUNIFOR AND IT\u2019S Local 1285\n(hereinafter referred to as the \u201cUNION\u201d)\n\nBoth parties agree that when it comes to the application of 5.03, issues arising from regulatory compliance\naudits that are outside of the seven (7) consecutive days of the incident giving rise thereto, the Company,\nin the presence of a steward will be able to discuss the matter with the employee.\n\nThis meeting is intended for either party to identify and or raise concerns and set expectations going forward.\nThis meeting will be documented.\n\nDated at Halton Hills, Ontario this 24\"\" day of June, 2025.\n\nFOR THE COMPANY FOR THE UNION\n\nis Hed \u2014\n\n33\n\f\n\n--- Page 34 ---\nLETTER OF UNDERSTANDING #8\n\n\n\nbetween\n\nSaputo Dairy Products Canada G.P.\n(hereinafter referred to as the \u201cCOMPANY\u201d)\n\nand\n\nUNIFOR AND IT\u2019S Local 1285\n(hereinafter referred to as the \u201cUNION\u201d)\n\nApprenticeship Pilot Program\n\nThe Company and the Union agree to implement an apprenticeship program. The Company will determine\nthe number of participants to that program according to the business needs and commits to enroll a\nminimum of one apprentice for the duration of the collective agreement.\n\nBoth parties agree that the committee will be organized within the first year after the signature of the\ncollective agreement.\n\nAPPRENTICESHIP PROGRAM\n\n\n\n1) APPRENTICESHIP STANDARDS\n\nThe following standards of apprenticeship covering the employment and training of apprentices in\nthe trades included in these standards have been agreed to by Unifor loca! 1285 and Saputo Dairy\nProducts Canada G.P.\n\n2) PURPOSE\n\nThe purpose of these standards is to make certain that extreme care is exercised in the selection\nof candidates and that the methods of training are uniform and sound, with the result that they will\nbe equipped for profitable employment, and to further the assurance of the Company of proficient\nemployees at the conclusion of the training period.\n\n3) DEFINITIONS\n\na)\nb)\n\nc)\n\nqd)\n\ne)\n\ng)\n\nThe term \u201cCompany\u201d shall mean Saputo Dairy Products Canada G.P.\nThe term \u201cUnion\u201d shall mean the duly authorized representatives of Unifor local 1285\n\n\u201cDirector\u201d shall mean the Director of Apprenticeship with the Ministry of Advanced education\nand skills development.\n\n\u201cTraining Agreement\u201d shall mean a written agreement between the Company and the person\nemployed as an apprentice, and registered with the Director.\n\n\u201cCommittee\u201d shall mean the Joint Apprenticeship Committee\n\nSupervisor of Apprentices shall be the Company representative on the committee, who will\nalso Chair the committee\n\n\u201cStandards of Apprenticeship\u201d shall mean this entire document, including these definitions\n\u201cAct\u201d shall mean the Ontario College of Trades and Apprenticeship Act of 2009\n\n34\n\f\n\n--- Page 35 ---\n4)\n\n5)\n\n6}\n\n7)\n\n8)\n\n9)\n\nAPPLICATION\n\nApplication for the apprenticeship will be received according to Article 8.01- Job postings and\nvacancies from the applicants considering they are eligible under the program of training. These\napplications of prospective apprentices will be reviewed by the Joint Apprenticeship Committee.\nHowever, it is understood that the final selection and the hiring of the apprentices is the sole\nresponsibility of the Company.\n\nAPPRENTICESHIP ELIGIBILITY REQUIREMENTS\n\nIn order to be eligible for the apprenticeship under these standards, the applicant must meet the\nfollowing qualifications:\n\nThe candidate has successfully completed the academic standard prescribed by the regulations for\nthe trade or must have a Provincial Secondary School diploma or its equivalent.\n\nExceptions to these requirements may be made by the Company upon the recommendation of the\nCommittee for the applicants who have unusual qualifications and shall not be inconsistent with the\n\nAct.\n\nIt is understood that all applicants must successfully pass the Company's regular employment\nrequirements including aptitude testing, reading comprehension, mathematics, and mechanical\n\ncomprehension.\nCREDIT FOR PREVIOUS EXPERIENCE\n\nAt the discretion of the Ministry of Advanced Education and Skills Development. training consultant,\ncredit for prior experience in the applicable trade may be given after evaluation and shall not be\ninconsistent with the Act. Review will be made prior to the completion of the apprentice\u2019s\nprobationary period.\n\nTERM OF APPRENTICESHIP\n\nThe term of apprenticeship shall be established by the Ministry of Advanced Education and Skills\nDevelopment, these standards of apprenticeship in accordance with the schedule of work,\nprocesses and related instruction.\n\nPROBATIONARY PERIOD\n\nThe first six months for every apprentice shall be a probationary period. During this probationary\nperiod the apprenticeship agreement with an apprentice may only be cancelled by the Company\nafter advising the Committee. The registration agencies shall be advised of such cancellations.\n\nHOURS OF WORK\n\nApprentices shail work the same hours and be subject to the same conditions regarding overtime\nrates as the journeyperson employed by the Company. !In case an apprentice is required to work\novertime he shall receive credit on the term of apprenticeship for only the actual hours of work.\nApprentices may work overtime hours providing that the proper ratio of apprentices to\njourneymen/journeywomen established by these standards is maintained.\n\n35\n\f\n\n--- Page 36 ---\n10) DISCIPLINE\n\nThe Committee shal! have the authority to recommend discipline and/or cancellation of the\napprenticeship agreement of the apprentice to the Company at any time for cause such as:\n\na) inability to learn;\nb) unreliability;\nc) unsatisfactory work;\nd) lack of interest in his/her work or education;\ne) improper conduct;\nf) failure to attend classroom instruction regularly.\n11) WAGES\na) Hours spent in classroom instruction shall not be considered hours of work in\n\ncomputing overtime.\n\nb) Apprentices must be in good standing with the college throughout their\napprenticeship regarding their academic status and attendance.\n\nc) Apprentices will sign a waiver to allow the joint apprenticeship committee access to\nacademic and attendance records at the college.\n\nd) Apprentices must supply proof of passing grade from the college in the basic course,\nin order to progress to the level of 80% of the journeyperson rate.\n\nThe Company will reimburse the Apprentice 50 % of educational tuition and materials\nupon proof of a passing grade and proof of payment. In the event, the Apprentice is\nunsuccessful in completing the probationary period or leave the Employ of Saputo\nwithin one (1) year after receiving their certification, the Apprentice agrees to\nreimburse the Company 50 % of payments made by the Employer.\n\ne) The Apprentice will apply to Employment Insurance and upon the proof of the\nacceptance by Service Canada, the Company will top up the regular wage of the for\ntime spent in school.\n\nf) An employee entering the apprenticeship program from the plant or facility will not\nreceive a reduced hourly wage rate, and the hourly rate will progress once they have\nthe required hours as per the schedule below :\n\n4st 2000 hours \u2014 90 % of the mech / non license start rate;\n\n24 2000 hours \u2014 Start rate of the mech / non license\n\n3 2000 hours \u2014 97.5 % of the mech / non license top rate\n\n4% 2000 hours \u2014 top rate of mech / non license\n\nUpon receiving a journeyman license \u2014 top rate mech / license top rate\n\nThe Company will pay the apprentice with 50 % of the tool allowances and will be\nentitled to full tool allowances after three (3) years.\n\n36\n\f\n\n--- Page 37 ---\n12)\n\n43)\n\nACADEMIC TRAINING\n\nApprentices are required as a condition of apprenticeship to receive and attend classroom\ninstructions at a technical or similar school. The schedule of work processes and related\ninstructions are per the Ministry of Advanced Education and Skills Development Apprenticeship\nTraining Standards. Modification may be made to the schedules by the Committee, subject to final\napproval by the Company. The Company shall notify the Ministry of such changes. Credit for time\nspent in academic training is given in the calculation of the hours of apprenticeship served and shall\nbe applied against the period total.\n\nJOINT APPRENTICESHIP COMMITTEE\n\nA committee made up of equal members of management and union representatives will make up\nthe joint apprenticeship. The Union member will be a skilled trades\u2019 journeyperson and shall be\nappointed by the union.\n\nThe Chairperson of the joint apprenticeship committee shall be the Company representative or the\nSupervisor of Apprentices. The Committee shall meet once a month unless otherwise agreed. It\nshall be the duty of the Committee:\n\na) To see that each prospective apprentice is interviewed and impressed with the\nresponsibilities he/she is about to accept as well as the benefits he/she will receive.\n\nb) To accept or reject applicants for apprenticeship subject to final approval by the\nPersonnel or Human Relations Department.\n\nc) To hear and decide on questions involving apprentices which relate to their\napprenticeship.\n\nd) To determine whether the apprentice's scheduled wage increase shall be withheld\nin the event that he/she is delinquent in his/her progress.\n\ne) To offer constructive suggestions for the improvement of training on the job.\n\nfy To certify the names of graduate apprentices to the Ministry of Advanced Education\n\nand Skills Development and recommend that a Certificate of Apprenticeship be\nawarded upon satisfactory completion of the requirements of apprenticeship\nestablished herein. No certificate will be issued by the Ministry unless\nrecommended by the Committee.\n\n9} To review the supervisor's monthly report on each apprentice.\nh) In general, to be responsible for the successful operation of the apprenticeship\nstandards in the plant and the successful completion of the apprenticeship by the\napprentices under these standards.\n\ni) To review the ratio of licensed, non-licensed, and apprentices for year 2 and 3 of\nthe current collective agreement.\n\n37\n\f\n\n--- Page 38 ---\n14)\n\n15)\n\n16)\n\n18)\n\n19)\n\nSUPERVISION OF APPRENTICES\n\nApprentices shall be under the general direction of the Supervisor of Apprentices and under the\nimmediate direction of the maintenance supervisor of the department to which they are assigned.\nThe Supervisor of Apprentices is authorized to move apprentices from one department to another,\nin accordance with the pre-determined schedule of work training. Where an apprentice is retained\nunavoidably on a scheduled work process for a period longer than the maximum time scheduled\nfor such work process, an explanation shall be sent to the Supervisor of Apprentices who will place\nit before the Committee for their review at the next meeting.\n\nThe Supervisor of Apprentices or an individual charged with this responsibility in consultation with\nthe Committee shall prepare adequate record forms to be filled in by the maintenance supervisor\nunder whom the apprentices receive direction, instruction and experience. They shall make a report\nat least every thirty (30) days to the Supervisor of Apprentices on the work and progress of the\napprentices under their supervision. These reports shall be submitted to the Committee for review.\n\nSENIORITY\n\nThe apprentices will exercise their seniority in their own group. For example, if there are four\napprentices in the trade such as \u201cmillwright\u201d and a reduction in this number is required due to lack\nof work, the first hired or classified as an apprentice shall be the last laid off and the last laid off\nshall be the first to be reinstated.\n\nAPPRENTICESHIP AGREEMENT\n\n\"Apprenticeship Agreement\" shall mean a written agreement between the Company and the person\nemployed as an apprentice and his parent or guardian (if he is a minor), which agreement shall be\napproved by the Supervisor of Apprentices and registered with the Ministry.\n\nThe following shall receive copies of the apprenticeship agreement:\n\nThe Apprentice\n\nThe Company\n\nThe Committee\n\nThe Ministry of Advanced Education and Skills Development.\nThe Local Union\n\nUnifor National Union\n\nOANA\n\nCERTIFICATE OF COMPLETION OF APPRENTICESHIP\n\nUpon completion of the apprenticeship under these Apprenticeship Standards, the Joint\nApprenticeship Committee will recommend to the Ministry, that a certificate of completion of\nApprenticeship, be issued to the apprentice. No certificates will be issued by the Ministry unless\nrecommended by the Committee.\n\nCERTIFICATE OF QUALIFICATION\nOnce the apprentice has received their Completion of Apprenticeship, the employee will arrange to\n\nsit and write for the Certificate of Qualification within one year. The Company will provide any\nsupport needed to pass this exam, such as paying for the employee to attend a pre-exam course.\n\n38\n\f\n\n--- Page 39 ---\nTRADES LICENCES\n\nThe Company agrees to pay for renewal of licences for the Skilled Trades employees upon presentation of\na receipt.\n\nThe Company will reimburse the skilled trades classifications listed in above for the renewal fees of the\nprimary and special licences that may be required by the employer.\n\nDated at Halton Hills, Ontario this 24\" day of June, 2025.\n\nFOR THE COMPANY FOR THE UNION\n\nWp\n\nKH FA\n\n39\n\f\n\n--- Page 40 ---\nType text here\n\n--- Page 41 ---\nLETTER OF UNDERSTANDING #10\n\n\n\nbetween\n\nSaputo Dairy Products Canada G.P.\n(hereinafter referred to as the \u201cCOMPANY\u201d)\n\nand\n\nUNIFOR AND IT\u2019S Local 1285\n(hereinafter referred to as the \u201cUNION\u201d)\n\nThe Union Bargaining Committee and the Company Bargaining Committee will meet to review the feasibility\nof establishing a wage model with fewer levels of progression. The solution needs to be satisfactory to both\nparties; with the purpose of attracting candidates and retaining employees.\n\nDated at Halton Hills, Ontario this 24\" day of June, 2025\n\nFOR THE COMPANY FOR THE UNION\n\n=\nHA \u2014\n\n41\n\f\n\n--- Page 42 ---\nLETTER OF UNDERSTANDING #11\nbetween\n\nSaputo Dairy Products Canada G.P.\n(hereinafter referred to as the \u201cCOMPANY\u2019\u201d)\n\nand\n\nUNIFOR AND IT\u2019S Local 1285\n(hereinafter referred to as the \"UNION\u201d)\n\nValve Maintenance Activities\n\n\n\nDuring the collective agreement renewal, the employer confirmed that valve maintenance activities are part\nof regular maintenance tasks for the maintenance department and shall be recognized under B-1 and all\nother articles pertaining to the classification of the role of maintenance. Both parties agree:\n\n* The following grandfathered employees paid as \u201cmaintenance licensed\u201d (re B-1.04) for valve\nmaintenance (ref B-1) will transfer to the maintenance department:\n\nBrian Bell\n\nKenton Grant\nJason Wilson\nAlan Dodson\n\neeee\n\nThis group will be considered a sub-group in the maintenance department for vacations, schedule,\novertime, and related seniority issues.\n\ne Valve maintenance tasks will be assigned first to grandfathered employees.\n\nThese conditions will end when any of these individuals leave, retire, or take another position through\njob posting, with the position subsequently posted as a maintenance position per as 8.01.\n\ne Whenever article 8.08 needs to be applied for a temporary posting for one of these individuals, the\ntemporary posting will refer to a maintenance position as per 8.01 principles.\n\nDated at Halton Hills, Ontario this 24\" day of June, 2025\n\nFOR THE UNION\n\n=\n\nFOR THE COMPANY\n\n\u00ab 1\n\n42\n\f\n\n--- Page 43 ---\nLETTER OF INTENT #1\nbetween\n\nSaputo Dairy Products Canada G.P.\n(hereinafter referred to as the \u201cCOMPANY\u201d)\n\nand\n\nUNIFOR AND IT\u2019S Local 1285\n(hereinafter referred to as the \u201cUNION\u201d)\n\nSubject: Letter of Intent on Long-Term Investment and Workforce Collaboration\n\nThis Letter is to outline our mutual understanding and commitment regarding a long-term investment\ninitiative that will impact unionized employees.\n\nWe are pleased to formally acknowledge our shared commitment to a long-term working partnership\nbetween Saputo and Unifor, Local 1285. and both parties recognize the mutual benefits of collaboration\nand agree to work together in good faith for the continued success of our partnership.\n\nBackground\n\nSaputo is undertaking a significant investment of approximately over $100 million over the next five (5)\nyears to improve, modernize our facilities with our primarily focus on food safety and improving working\nconditions. These investments are expected to enhance productivity, while ensuring long-term\ncompetitiveness, and create sustainable employment opportunities.\n\nCommitments:\n\n41.\n\n4.\n\nJob Security:\n\nThe Company remains committed to protecting the employment of all current personnel throughout\nthe investment phase.\n\nIf additional employees are needed, the Company may hire them in accordance with the collective\nagreement and will notify the union. The hiring of temporary employees will not result in the\ndisplacement of regular employees\n\nTraining and Upskilling:\nThe Parties agree to jointly develop and implement training programs to ensure employees are\nequipped with the skills required to operate new technologies and systems.\n\nLabor-Management Collaboration:\nThe joint labour management (JLM) meetings will serve to monitor the progress of the investment,\naddress concerns, and ensure transparency throughout the implementation period.\n\nDuration:\nJLM meetings will remain in effect for the duration of the investment and ramp up periods.\n\nThis letter of intent reflects the Parties\u2019 shared intentions and commitment to a cooperative approach during\nthis period of transformation.\n\nFOR THE COMPANY FOR THE UNION\n\n43\n\f\n\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\nCURRENT JHSC OPEN ITEMS\nAs of meeting: Thursday, March 5, 2026\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n\nNEW BUSINESS (10 items)\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n#1 [INSP] RISK: High (16d)\n  Issue: Picking >3x/week causing strain & injury. Workers on modified duties can\u2019t pick; remaining workers overworked.\n  Action: Ergonomic assessment needed (last was 2019 pre-COVID). Discussed reducing picking frequency to reduce bodily harm. The employer advised that employees assigned to picking will be scheduled no more tha\n  Raised: Kevin (Co-Chair) | Follow-up: Alykhan | Dept: WH\n  Status: In Progress | Started: 2026-03-05\n\n#2 [INSIGHT] RISK: Med (2d)\n  Issue: CIP is dealing with a lot of chemicals & feel they need respirators\n  Action: Risk assessment to be done for respirator use in CIP\n  Raised: Adrian | Follow-up: Scott | Dept: CIP\n  Status: In Progress | Started: 2026-03-19\n\n#3 [INSIGHT] RISK: High (2d)\n  Issue: SOP & binders are not accurate to the current tasks in production.\n  Action: Review/revise red binders to match\n  Raised: Kevin (Co-Chair) | Follow-up: Scott | Dept: CIP\n  Status: In Progress | Started: 2026-03-19\n\n#4 [INSIGHT] RISK: High (16d)\n  Issue: Fencing/netting needed by Pal sort area \u2013 block off back walkways (case wash & door 18).\n  Action: Mike to install pedestrian walkway + netting to prevent falling empty cases. Protect skid sorting in WH2 case flow. F27 project \u2013 need temp control in interim.\n  Raised: Dan | Follow-up: Mike H | Dept: OPS\n  Status: In Progress | Started: 2026-03-05\n\n#5 [INSP] RISK: Med (16d)\n  Issue: Floor repairs in cooler needed before further corrosion.\n  Action: H&S and food safety concern. Consulting Michele Stone-Logan and Warehouse supervisors. Quote received, waiting on approval\n  Raised: Kevin | Follow-up: Corey S | Dept: WH\n  Status: In Progress | Started: 2026-03-05\n\n#6 [INSP] RISK: Med (16d)\n  Issue: Drain pipe in Purity Room needs drip pan. Pipe above Filler 18 & Label Machine leaking.\n  Action: Colby to supply estimate to Scott. Kiran wants design/plan verified BEFORE install. Ready to go \u2013 need 4 hrs downtime.\n  Raised: Kevin (Co-Chair) | Follow-up: Kiran | Dept: OPS\n  Status: In Progress | Started: 2026-03-05\n\n#7 [INSP] RISK: High (16d)\n  Issue: Milk receiving processes not followed by drivers.\n  Action: Jerrilyn & Giovanni implementing supervisor enforcement. Employees NOT expected to enforce on drivers. Non-compliant drivers told NOT to return. No update, upper management is working on a fix.\n  Raised: Dan | Follow-up: Mike H | Dept: OPS\n  Status: In Progress | Started: 2026-03-05\n\n#8 [INSP] RISK: High (18d)\n  Issue: Side panels on F12\u201314 not replaced after removal. Maintenance wires blocking guards.\n  Action: New hardware \u2013 harder to remove, easier to replace. New filler peroxide tanks relocated. Scott to contact Westguard for interlock options. No Change, looking to alter doors.\n  Raised: Kevin (Co-Chair) | Follow-up: Scott | Dept: OPS\n  Status: In Progress | Started: 2026-03-03\n\n#9 [INSP] RISK: Low (16d)\n  Issue: First aid kit outside Valve Maintenance Shop not relocated.\n  Action: Relocate to area between chemical cage and valve maintenance (near white fire extinguisher) for accessibility. Work order 3001172596 put in\n  Raised: Dan | Follow-up: Mike H | Dept: OPS\n  Status: In Progress | Started: 2026-03-05\n\n#10 [INSP] RISK: High (16d)\n  Issue: To of Ramp & hallway to production from lockers slick when humidity increases.\n  Action: Grip tape for hallway. Corey & Scott to install. *Job scheduled Sunday March 8th. Grip tape didn't work, rugs used in place, monitoring for effectivness, to ensure we don't need more/it works.\n  Raised: Kevin (Co-Chair) | Follow-up: Scott | Dept: OPS\n  Status: In Progress | Started: 2026-03-05\n\nOLD BUSINESS (3 items)\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n#1 [INSP] RISK: High (135d)\n  Issue: Identify PPE zones. Add signage for ALL required PPE. Update supervisors and employees.\n  Action: Kiran & Scott working with Michele and Dhurin for whole plant. Removing most PPE boards \u2013 everyone to have own PPE and lockers. Work has started Scott & QC working on this\n  Raised: Kevin | Follow-up: Scott Ahara | Dept: WH\n  Status: In Progress | Started: 2025-11-06\n\n#2 [INSP] RISK: High (238d)\n  Issue: Hold supervisors accountable for H&S follow-up. Safety glasses not worn consistently in production.\n  Action: Supervisors not placing work orders. WH afternoons doing well. Giovanni determining mandatory safety glasses zones. CSA approved, no tinted. Need an update from Adrian. \n  Raised: Kevin | Follow-up: Scott Ahara | Dept: WH\n  Status: In Progress | Started: 2025-07-26\n\n#3 [INSP] RISK: Med (335d)\n  Issue: Ambient racking area \u2013 cracks & potholes causing operator soreness, risk of dumping production, premature equipment wear.\n  Action: B4 coming Sept 30. Scott asking for quote. Estimate received \u2013 awaiting approval and start date. Scott has told the company to start the work. 3/19/2026\n  Raised: Kevin | Follow-up: Alykhan / Chris J | Dept: WH\n  Status: In Progress | Started: 2025-04-20\n\nRECOMMENDATIONS (2 items)\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n#1 PRIORITY: High (223d)\n  Rec: Case Receiving humidity. Hygienist to assess area. Hygrometers placed around warehouse. Must be corrected for employee and product safety.\n  Update: Hygrometers to be deployed. Team can wear shorts. Hygienist to assess per ACGIH guidelines. Coming summer. Alykhan to install curtain.\n  Owner: Corey S | Dept: WH | Status: In Progress\n\n#2 PRIORITY: High (35d)\n  Rec: Long Johns causing issues in shipping \u2013 vibrations hard on bodies and machines.\n  Update: Safe work procedure document being drafted. Under review by Alykhan.SOP being made to support safe work procedure & will be deployed. Alykhan confirmed that this process can go ahead. \n  Owner: Alykhan | Dept: WH | Status: In Progress\n\n\nWhen the user asks about current open items, outstanding issues, or JHSC status, reference the items above with their specific details, risk levels, age, and assigned follow-up owners. You can also flag items that are overdue or high priority.";
+
+  // ════════════════════════════════════════
+  //  VIEW SWITCHING
+  // ════════════════════════════════════════
+  let currentView = 'home';
+  const chatHistory = [];
+
+  function switchView(view) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('view-' + view).classList.add('active');
+    document.querySelectorAll('.nav-tab')[
+      ['home','ask','grievance','transcribe','docs','inspect'].indexOf(view)
+    ].classList.add('active');
+
+    document.getElementById('input-area').style.display = view === 'ask' ? 'block' : 'none';
+    currentView = view;
+  }
+
+  // ════════════════════════════════════════
+  //  CLAUDE API CALL
+  // ════════════════════════════════════════
+  async function callClaude(messages, systemPrompt) {
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: systemPrompt || SYSTEM_PROMPT,
+          messages: messages
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.content.map(item => item.text || '').join('\n');
+    } catch (err) {
+      console.error('Claude API error:', err);
+      return null;
+    }
+  }
+
+  function setApiStatus(online) {
+    const dot = document.getElementById('api-dot');
+    const text = document.getElementById('api-status-text');
+    if (online) {
+      dot.className = 'api-dot';
+      text.textContent = 'Claude AI Connected';
+    } else {
+      dot.className = 'api-dot offline';
+      text.textContent = 'AI Offline — Using local responses';
+    }
+  }
+
+  // ════════════════════════════════════════
+  //  CHAT
+  // ════════════════════════════════════════
+  const chatContainer = document.getElementById('chat-container');
+  const chatInput = document.getElementById('chat-input');
+
+  function setPrompt(text) {
+    setTimeout(() => {
+      chatInput.value = text;
+      chatInput.focus();
+      autoResize(chatInput);
+    }, 100);
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  function addBubble(text, role) {
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble ' + role;
+    bubble.textContent = text;
+    chatContainer.appendChild(bubble);
+    bubble.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    return bubble;
+  }
+
+  function showTyping() {
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble assistant typing';
+    bubble.id = 'typing-indicator';
+    bubble.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+    chatContainer.appendChild(bubble);
+    bubble.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }
+
+  function hideTyping() {
+    const t = document.getElementById('typing-indicator');
+    if (t) t.remove();
+  }
+
+  async function sendMessage() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    addBubble(text, 'user');
+    chatInput.value = '';
+    autoResize(chatInput);
+
+    chatHistory.push({ role: 'user', content: text });
+    showTyping();
+    document.getElementById('send-btn').disabled = true;
+
+    const response = await callClaude(chatHistory);
+
+    hideTyping();
+    document.getElementById('send-btn').disabled = false;
+
+    if (response) {
+      setApiStatus(true);
+      chatHistory.push({ role: 'assistant', content: response });
+      addBubble(response, 'assistant');
+    } else {
+      setApiStatus(false);
+      const fallback = generateFallback(text);
+      chatHistory.push({ role: 'assistant', content: fallback });
+      addBubble(fallback, 'assistant');
+    }
+  }
+
+  function generateFallback(query) {
+    const q = query.toLowerCase();
+    if (q.includes('overtime')) {
+      return "Under the Ontario ESA, overtime pay (1.5x) is required after 44 hours/week. Your Unifor 1285 collective agreement may have more favourable terms — many Unifor contracts trigger overtime at 40 hours or after 8 hours/day.\n\nI'd need your specific collective agreement to cite exact articles. Check with your steward or I can help draft a grievance if overtime provisions are being violated.";
+    }
+    if (q.includes('safety') || q.includes('rights') || q.includes('ohsa')) {
+      return "Under OHSA, you have three fundamental rights:\n\n1. Right to Know — about workplace hazards\n2. Right to Participate — through the JHSC\n3. Right to Refuse — unsafe work without reprisal\n\nAs JHSC Worker Co-Chair at Saputo Georgetown, you also have the right to conduct workplace inspections, investigate critical injuries, and make written recommendations to management.\n\nThis is general guidance — for specific situations, consult with your Unifor representative.";
+    }
+    if (q.includes('grievance')) {
+      return "Under the Unifor 1285 collective agreement, grievances typically follow a multi-step process:\n\n1. Informal resolution attempt\n2. Written grievance filed within the contractual time limit\n3. Meeting with management\n4. Escalation to higher steps if unresolved\n5. Arbitration as final step\n\nTime limits are critical — check your collective agreement for exact deadlines. Head to the Grievance tab to draft a formal letter, or consult your steward for guidance.";
+    }
+    return "[AI is currently offline — showing cached response]\n\nI can help with questions about your Unifor 1285 collective agreement, Ontario labour law, OHSA, workplace safety, grievance procedures, and JHSC matters.\n\nTry being more specific, or check back when the AI connection is restored.";
+  }
+
+  // ════════════════════════════════════════
+  //  GRIEVANCE DRAFTING (AI-powered)
+  // ════════════════════════════════════════
+  async function draftGrievance() {
+    const type = document.getElementById('grv-type').value;
+    const name = document.getElementById('grv-name').value;
+    const dept = document.getElementById('grv-dept').value;
+    const date = document.getElementById('grv-date').value;
+    const desc = document.getElementById('grv-desc').value;
+    const articles = document.getElementById('grv-articles').value;
+    const remedy = document.getElementById('grv-remedy').value;
+
+    if (!type || !desc) {
+      alert('Please select a grievance type and describe what happened.');
+      return;
+    }
+
+    const output = document.getElementById('grievance-output');
+    output.style.display = 'block';
+    output.textContent = '⏳ AI is drafting your grievance letter...';
+    document.getElementById('grv-btn').disabled = true;
+
+    const grvPrompt = `Draft a formal union grievance letter with the following details:
+
+Union: Unifor Local 1285
+Employer: Saputo Dairy Products Canada G.P.
+Plant: Georgetown, Ontario
+Grievor: ${name || '[Grievor Name]'}
+Department/Shift: ${dept || '[Department/Shift]'}
+Grievance Type: ${type}
+Date of Incident: ${date || '[Date]'}
+Description: ${desc}
+Contract Articles Violated: ${articles || 'To be determined — reference applicable articles'}
+Remedy Sought: ${remedy || 'That the grievor be made whole and that the Employer cease and desist from further violations'}
+
+Format the grievance letter professionally with:
+- Header with grievance number (use GRV-2026-XXX format), date filed (today), union and employer names
+- Statement of grievance referencing specific contract violations
+- Description of the incident
+- Remedy sought section
+- Signature lines for the steward and grievor
+- A note at the bottom that this is AI-generated and should be reviewed by the union steward before filing
+
+Keep it formal but clear. Use standard Canadian union grievance language.`;
+
+    const response = await callClaude(
+      [{ role: 'user', content: grvPrompt }],
+      'You are a union grievance drafting assistant for Unifor Local 1285 at Saputo Dairy Products, Georgetown, Ontario. Draft professional, legally sound grievance letters. Use Canadian English spelling. Be thorough but concise.'
+    );
+
+    document.getElementById('grv-btn').disabled = false;
+
+    if (response) {
+      output.textContent = response;
+    } else {
+      // Fallback template
+      const dateStr = date ? new Date(date + 'T12:00:00').toLocaleDateString('en-CA', { year:'numeric', month:'long', day:'numeric' }) : '[Date of Incident]';
+      const articleRef = articles || '[Applicable Articles]';
+      const remedyText = remedy || 'that the grievor be made whole and that the Employer cease and desist from further violations';
+      const grvNum = 'GRV-2026-' + String(Math.floor(Math.random()*900+100));
+
+      output.textContent =
+`UNIFOR LOCAL 1285 — GRIEVANCE
+${'═'.repeat(44)}
+
+Grievance No: ${grvNum}
+Date Filed: ${new Date().toLocaleDateString('en-CA', { year:'numeric', month:'long', day:'numeric' })}
+
+Union: Unifor Local 1285
+Employer: Saputo Dairy Products Canada G.P.
+Plant: Georgetown, Ontario
+Grievor: ${name || '[Grievor Name]'}
+Department: ${dept || '[Department/Shift]'}
+Type: ${type}
+Date of Incident: ${dateStr}
+
+${'─'.repeat(44)}
+
+STATEMENT OF GRIEVANCE:
+
+The Union hereby grieves that the Employer has violated the Collective Agreement between Unifor Local 1285 and Saputo Dairy Products Canada G.P., specifically ${articleRef}, and any other applicable articles, provisions, appendices, or legislation including but not limited to the Ontario Employment Standards Act, the Occupational Health and Safety Act, and the Ontario Human Rights Code.
+
+PARTICULARS:
+
+On ${dateStr}, the following occurred:
+
+${desc}
+
+This action by the Employer constitutes a violation of the Collective Agreement and the rights of the grievor and/or the bargaining unit.
+
+REMEDY SOUGHT:
+
+The Union requests ${remedyText}. The Union further reserves the right to amend, supplement, or modify this grievance and the remedy sought as additional information becomes available through the grievance procedure.
+
+${'─'.repeat(44)}
+
+Respectfully submitted,
+
+_____________________________
+Union Steward — Unifor Local 1285
+
+_____________________________
+Grievor: ${name || '[Name]'}
+
+_____________________________
+Date
+
+${'─'.repeat(44)}
+⚠️ AI-GENERATED DRAFT — Review with your Unifor steward or representative before filing. Verify all article references against your specific collective agreement. Time limits for filing may apply.`;
+    }
+
+    output.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // ════════════════════════════════════════
+  //  TRANSCRIPT SUMMARIZER (AI-powered)
+  // ════════════════════════════════════════
+  async function summarizeTranscript() {
+    const type = document.getElementById('mtg-type').value;
+    const date = document.getElementById('mtg-date').value;
+    const attendees = document.getElementById('mtg-attendees').value;
+    const transcript = document.getElementById('mtg-transcript').value;
+
+    if (!transcript) {
+      alert('Please paste a meeting transcript.');
+      return;
+    }
+
+    const output = document.getElementById('transcript-output');
+    output.style.display = 'block';
+    output.textContent = '⏳ AI is analyzing your transcript...';
+    document.getElementById('mtg-btn').disabled = true;
+
+    const meetingType = type || 'Meeting';
+    const meetingDate = date || 'Not specified';
+
+    const mtgPrompt = `Analyze this ${meetingType} transcript from Saputo Dairy Products, Georgetown (Unifor Local 1285) and extract a structured summary.
+
+Meeting Date: ${meetingDate}
+Attendees: ${attendees || 'Not specified'}
+
+TRANSCRIPT:
+${transcript}
+
+Please extract and organize into these sections:
+
+1. MEETING SUMMARY (2-3 sentence overview)
+
+2. KEY DECISIONS MADE (bullet points)
+
+3. ACTION ITEMS (format each as: [Assigned To] — [Task] — Due: [Date if mentioned])
+
+4. INSPECTION FINDINGS (if any — format as: Zone [X] — [Finding] — Risk Level: [High/Medium/Low])
+
+5. FOLLOW-UPS FROM PREVIOUS MEETINGS (if referenced)
+
+6. OUTSTANDING / UNRESOLVED ISSUES
+
+7. NEXT MEETING (if mentioned)
+
+Be thorough but concise. Use the actual names from the transcript. If the transcript is for a JHSC meeting, pay special attention to health & safety items, inspection findings, and compliance deadlines.`;
+
+    const response = await callClaude(
+      [{ role: 'user', content: mtgPrompt }],
+      'You are a meeting minutes extraction assistant for Unifor Local 1285 at Saputo Dairy Products, Georgetown, Ontario. You specialize in JHSC meeting analysis, extracting action items, inspection findings, and safety-related decisions. Be precise and thorough. Use Canadian English.'
+    );
+
+    document.getElementById('mtg-btn').disabled = false;
+
+    if (response) {
+      output.textContent = response;
+      document.getElementById('export-btn').style.display = 'block';
+    } else {
+      output.textContent =
+`${meetingType.toUpperCase()} — SUMMARY
+${'═'.repeat(42)}
+⚠️ AI is currently offline. Here's what would happen with a live connection:
+
+The AI would analyze your ${transcript.length}-character transcript and extract:
+
+📋 KEY DECISIONS — All decisions made during the meeting
+✅ ACTION ITEMS — Assigned tasks with owners and deadlines
+🔍 INSPECTION FINDINGS — Zone-by-zone findings with risk levels
+📝 FOLLOW-UPS — Status of previous action items
+⚠️ OUTSTANDING ISSUES — Items needing further discussion
+
+Reconnect to the AI to process this transcript.`;
+    }
+
+    output.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // ════════════════════════════════════════
+  //  MEETING PREP BRIEF
+  // ════════════════════════════════════════
+  async function prepareMeetingBrief() {
+    const output = document.getElementById('meeting-brief-output');
+    output.style.display = 'block';
+    output.textContent = '⏳ AI is preparing your meeting brief...';
+    document.getElementById('prep-btn').disabled = true;
+
+    const prompt = `You are helping the Worker Co-Chair prepare for the next JHSC meeting at Saputo Dairy Products, Georgetown (Unifor Local 1285).
+
+Based on the current open JHSC items in your context, generate a MEETING PREPARATION BRIEF with these sections:
+
+1. PRIORITY ITEMS TO PRESS MANAGEMENT ON
+   - List the top 3-5 items that are overdue, high-risk, or where management has not followed up
+   - For each, include a suggested talking point or question to ask management
+   - Note the specific person responsible and how many days the item has been open
+
+2. STATUS UPDATES TO REQUEST
+   - Items where the last update is vague or stale
+   - Specific questions to ask each follow-up owner (Scott, Alykhan, Mike, Corey, Kiran)
+
+3. OHSA LEVERAGE POINTS
+   - Any items where OHSA sections can be cited to compel action
+   - Recommendation response deadlines under s.9(20)
+   - Right to refuse implications if applicable
+
+4. SUGGESTED NEW BUSINESS
+   - Based on patterns in the current items, suggest 2-3 new items the committee should consider raising
+   - Any seasonal or timing-based concerns
+
+5. CO-CHAIR TALKING POINTS
+   - 3-4 concise statements to open the meeting with, summarizing the committee's position
+   - Emphasize accountability and urgency on overdue items
+
+Keep it practical and direct. This is a working document for the Worker Co-Chair, not a formal report. Use bullet points. Be specific with names, dates, and item references.`;
+
+    const response = await callClaude(
+      [{ role: 'user', content: prompt }]
+    );
+
+    document.getElementById('prep-btn').disabled = false;
+
+    if (response) {
+      output.textContent = response;
+    } else {
+      output.textContent =
+`MEETING PREPARATION BRIEF
+${'═'.repeat(42)}
+⚠️ AI is currently offline. Here's a manual checklist:
+
+PRIORITY ITEMS TO PRESS:
+• Racking area potholes — 335 days, still awaiting start date (Alykhan/Chris J)
+• Safety glasses enforcement — 238 days, need update from Adrian (Scott)
+• PPE zone signage — 135 days, work reportedly started (Scott)
+
+STATUS UPDATES NEEDED FROM:
+• Scott Ahara — 5 open items (SOPs, PPE, grip tape, safety glasses, CIP respirators)
+• Mike Harman — 3 items (fencing, first aid relocation, milk receiving)
+• Alykhan Kurji — 2 items (picking ergonomics, racking repair)
+
+OHSA LEVERAGE:
+• 2 formal recommendations outstanding (Case Receiving humidity at 223d, Long Johns at 35d)
+• OHSA s.9(20): Employer MUST respond in writing within 21 days
+• Both are past the 21-day window — document this for the record
+
+Connect to AI for a complete brief with specific talking points.`;
+    }
+
+    output.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // ════════════════════════════════════════
+  //  ZONE INSPECTION
+  // ════════════════════════════════════════
+  let findingCount = 0;
+
+  function addFinding() {
+    findingCount++;
+    const template = document.getElementById('finding-template').innerHTML;
+    const div = document.createElement('div');
+    div.innerHTML = template.replace('Finding #1', `Finding #${findingCount}`);
+    document.getElementById('findings-list').appendChild(div.firstElementChild);
+  }
+
+  function renumberFindings() {
+    const cards = document.querySelectorAll('#findings-list .finding-card');
+    findingCount = cards.length;
+    cards.forEach((card, i) => {
+      card.querySelector('.finding-num').textContent = `Finding #${i + 1}`;
+    });
+  }
+
+  function setRisk(btn, level) {
+    const card = btn.closest('.finding-card');
+    card.querySelectorAll('.risk-btn').forEach(b => {
+      b.style.background = 'var(--bg-card)';
+      b.style.borderColor = 'var(--border)';
+      b.style.color = 'var(--text-primary)';
+    });
+    btn.style.background = level === 'High' ? 'rgba(239,68,68,0.15)' : level === 'Med' ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)';
+    btn.style.borderColor = level === 'High' ? '#ef4444' : level === 'Med' ? '#f59e0b' : '#10b981';
+    btn.style.color = level === 'High' ? '#ef4444' : level === 'Med' ? '#f59e0b' : '#10b981';
+    card.querySelector('.finding-risk').value = level;
+  }
+
+  // Auto-add first finding on view switch
+  document.addEventListener('DOMContentLoaded', () => {
+    const today = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('insp-date');
+    if (dateInput) dateInput.value = today;
+  });
+
+  async function generateInspectionReport() {
+    const zone = document.getElementById('insp-zone').value;
+    const inspector = document.getElementById('insp-inspector').value;
+    const date = document.getElementById('insp-date').value;
+    const cards = document.querySelectorAll('#findings-list .finding-card');
+
+    if (!zone || cards.length === 0) {
+      alert('Please select a zone and add at least one finding.');
+      return;
+    }
+
+    const findings = [];
+    cards.forEach((card, i) => {
+      findings.push({
+        num: i + 1,
+        category: card.querySelector('.finding-category').value || 'General',
+        observation: card.querySelector('.finding-observation').value,
+        risk: card.querySelector('.finding-risk').value || 'Med'
+      });
+    });
+
+    const output = document.getElementById('inspection-output');
+    output.style.display = 'block';
+    output.textContent = '⏳ AI is generating your inspection report...';
+    document.getElementById('insp-btn').disabled = true;
+
+    const prompt = `Generate a formal JHSC workplace inspection report for the following findings.
+
+Zone: ${zone}
+Inspector: ${inspector || 'Not specified'}
+Date: ${date || 'Today'}
+Facility: Saputo Dairy Products, Georgetown, ON
+
+Findings:
+${findings.map(f => `${f.num}. [${f.category}] Risk: ${f.risk}\n   Observation: ${f.observation}`).join('\n\n')}
+
+For EACH finding, provide:
+1. A formal description suitable for JHSC minutes
+2. The specific hazard type and who/what is at risk
+3. A recommended corrective action with timeline
+4. Relevant OHSA section reference if applicable
+5. The risk rating (confirm or adjust based on the description)
+
+Format as a clean inspection report. End with a summary of total findings by risk level.`;
+
+    const response = await callClaude(
+      [{ role: 'user', content: prompt }],
+      'You are a workplace health and safety inspection report writer for a JHSC at Saputo Dairy Products (Unifor Local 1285), Georgetown, Ontario. Write formal, clear inspection findings with OHSA references. Use Canadian English.'
+    );
+
+    document.getElementById('insp-btn').disabled = false;
+
+    if (response) {
+      output.textContent = response;
+      document.getElementById('insp-export-btn').style.display = 'block';
+    } else {
+      output.textContent = `INSPECTION REPORT — ${zone}
+${'═'.repeat(42)}
+Inspector: ${inspector || 'N/A'}
+Date: ${date || 'N/A'}
+
+⚠️ AI is currently offline.
+
+${findings.length} finding(s) recorded:
+${findings.map(f => `#${f.num} [${f.category}] Risk: ${f.risk}\n${f.observation}`).join('\n\n')}
+
+Connect to AI for formal JHSC language, OHSA references, and recommended corrective actions.`;
+    }
+
+    output.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function exportInspection() {
+    const zone = document.getElementById('insp-zone').value;
+    const inspector = document.getElementById('insp-inspector').value;
+    const date = document.getElementById('insp-date').value || new Date().toISOString().split('T')[0];
+    const cards = document.querySelectorAll('#findings-list .finding-card');
+
+    let csv = '\uFEFF';
+    csv += 'Finding ID,Zone,Category,Observation,Risk Level,Inspector,Date,Status,Verified by Co-Chair\n';
+
+    cards.forEach((card, i) => {
+      const cat = card.querySelector('.finding-category').value || 'General';
+      const obs = card.querySelector('.finding-observation').value.replace(/"/g, '""').replace(/\n/g, ' ');
+      const risk = card.querySelector('.finding-risk').value || 'Med';
+      csv += `"${zone}-${String(i+1).padStart(3,'0')}","${zone}","${cat}","${obs}","${risk}","${inspector}","${date}","Open",""\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Inspection_${zone.replace(' ', '')}_${date}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ════════════════════════════════════════
+  //  EXPORT TO EXCEL
+  // ════════════════════════════════════════
+  function exportToExcel() {
+    const output = document.getElementById('transcript-output').textContent;
+    const meetingType = document.getElementById('mtg-type').value || 'Meeting';
+    const meetingDate = document.getElementById('mtg-date').value || new Date().toISOString().split('T')[0];
+
+    // Create CSV content matching JHSC minutes format
+    let csv = 'BOM';
+    csv = '\uFEFF'; // UTF-8 BOM for Excel
+    csv += '#,Type,Issue Description,Recommended Action / Update,Start Date,Raised By,Follow Up,Dept,Status,Risk\n';
+
+    // Parse action items from AI output
+    const lines = output.split('\n');
+    let itemNum = 1;
+    let inActionItems = false;
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.toUpperCase().includes('ACTION ITEM')) {
+        inActionItems = true;
+        continue;
+      }
+      if (inActionItems && trimmed.startsWith('•') || trimmed.startsWith('-') || trimmed.match(/^\d+\./)) {
+        const cleaned = trimmed.replace(/^[•\-\d.]+\s*/, '').replace(/"/g, '""');
+        // Try to parse "[Person] — [Task] — Due: [Date]" format
+        const parts = cleaned.split(/\s*[—–-]\s*/);
+        const assignee = parts[0] || '';
+        const task = parts[1] || cleaned;
+        const due = parts[2] ? parts[2].replace(/Due:\s*/i, '') : '';
+
+        csv += `${itemNum},"MEETING","${task}","${due}",${meetingDate},"${assignee}","","","In Progress","Med"\n`;
+        itemNum++;
+      }
+      if (inActionItems && trimmed === '' && itemNum > 1) {
+        // Check if next section
+        if (lines.indexOf(line) + 1 < lines.length) {
+          const next = lines[lines.indexOf(line) + 1].trim().toUpperCase();
+          if (next.includes('FINDING') || next.includes('FOLLOW') || next.includes('OUTSTANDING') || next.includes('NEXT')) {
+            inActionItems = false;
+          }
+        }
+      }
+    }
+
+    if (itemNum === 1) {
+      // No structured items found — export raw summary
+      csv += `1,"MEETING","See full summary below","${output.substring(0, 500).replace(/"/g, '""')}",${meetingDate},"JHSC","","","In Progress",""\n`;
+    }
+
+    // Download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `JHSC_Action_Items_${meetingDate}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ════════════════════════════════════════
+  // ════════════════════════════════════════
+  function filterDocs() {
+    const query = document.getElementById('doc-search').value.toLowerCase();
+    const items = document.querySelectorAll('.doc-item');
+    let visible = 0;
+
+    items.forEach(item => {
+      const name = item.dataset.name.toLowerCase();
+      const show = name.includes(query);
+      item.style.display = show ? 'flex' : 'none';
+      if (show) visible++;
+    });
+
+    document.getElementById('doc-list').style.display = visible ? 'block' : 'none';
+    document.getElementById('doc-empty').style.display = visible ? 'none' : 'block';
+  }
+
+  // ════════════════════════════════════════
+  //  INIT — test API connection
+  // ════════════════════════════════════════
+  (async function init() {
+    try {
+      const test = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 10,
+          messages: [{ role: 'user', content: 'test' }]
+        })
+      });
+      // Even a 401 means the endpoint is reachable
+      setApiStatus(test.ok || test.status === 401 || test.status === 400);
+    } catch {
+      setApiStatus(false);
+    }
+  })();
+</script>
+
+</body>
+</html>
